@@ -3,6 +3,8 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import base64
+import plotly.express as px
+import plotly.graph_objects as go
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
@@ -39,9 +41,8 @@ def correlation_matrix_plot(data):
     st.header("Correlation Matrix")
     numeric_columns = data.select_dtypes(include=['float64', 'int64']).columns
     correlation_matrix = data[numeric_columns].corr()
-    plt.figure(figsize=(12, 8))
-    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
-    st.pyplot(plt)
+    fig = px.imshow(correlation_matrix, text_auto=True, aspect="auto", color_continuous_scale='RdBu_r')
+    st.plotly_chart(fig)
     st.write("This heatmap shows the correlation between various metrics in the dataset.")
 
 def regression_analysis_plot(hospital_data):
@@ -52,13 +53,16 @@ def regression_analysis_plot(hospital_data):
     model = LinearRegression()
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
-    plt.figure()
-    plt.scatter(X_test, y_test, color='blue', label='Actual')
-    plt.plot(X_test, y_pred, color='red', linewidth=2, label='Predicted')
-    plt.xlabel('Beds COVID')
-    plt.ylabel('Admitted COVID')
-    plt.legend()
-    st.pyplot(plt)
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=X_test['beds_covid'], y=y_test, mode='markers', name='Actual', marker=dict(color='blue')))
+    fig.add_trace(go.Scatter(x=X_test['beds_covid'], y=y_pred, mode='lines', name='Predicted', line=dict(color='red')))
+    fig.update_layout(
+        xaxis_title='Beds COVID',
+        yaxis_title='Admitted COVID',
+        title='Regression Analysis: Beds COVID vs. Admitted COVID'
+    )
+    st.plotly_chart(fig)
     st.write("This plot shows the relationship between the number of COVID-19 beds and the number of admitted COVID-19 patients.")
 
 def feature_importance_plot(icu_data):
@@ -70,12 +74,9 @@ def feature_importance_plot(icu_data):
     model.fit(X_train, y_train)
     feature_importances = model.feature_importances_
     features = X.columns
-    plt.figure()
-    plt.bar(features, feature_importances)
-    plt.xlabel('Features')
-    plt.ylabel('Importance')
-    plt.title('Feature Importance for ICU Data')
-    st.pyplot(plt)
+
+    fig = px.bar(x=features, y=feature_importances, labels={'x':'Features', 'y':'Importance'}, title='Feature Importance for ICU Data')
+    st.plotly_chart(fig)
     st.write("This bar chart shows the importance of different features in predicting the number of ICU COVID-19 patients.")
 
 def main():
