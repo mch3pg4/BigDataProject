@@ -11,19 +11,22 @@ def load_data():
     # Load the data
     hospital_data = pd.read_csv('filtered_datasets/hospital.csv')
     icu_data = pd.read_csv('filtered_datasets/icu.csv')
+    cases_data = pd.read_csv('filtered_datasets/cases_state.csv')
     
     # Convert the 'date' columns to datetime
     hospital_data['date'] = pd.to_datetime(hospital_data['date'])
     icu_data['date'] = pd.to_datetime(icu_data['date'])
+    cases_data['date'] = pd.to_datetime(cases_data['date'])
     
-    return hospital_data, icu_data
+    return hospital_data, icu_data, cases_data
 
-def preprocess_data(hospital_data, icu_data, start_year=2020, end_year=2024):
+def preprocess_data(hospital_data, icu_data, cases_data, start_year=2020, end_year=2024):
     # Filter the data for the selected year range
     hospital_data = hospital_data[(hospital_data['date'].dt.year >= start_year) & (hospital_data['date'].dt.year <= end_year)]
     icu_data = icu_data[(icu_data['date'].dt.year >= start_year) & (icu_data['date'].dt.year <= end_year)]
+    cases_data = cases_data[(cases_data['date'].dt.year >= start_year) & (cases_data['date'].dt.year <= end_year)]
     
-    return hospital_data, icu_data
+    return hospital_data, icu_data, cases_data
 
 def line_graph(hospital_data):
     fig = px.line(hospital_data, x='date', y='beds_covid', title='COVID-19 Beds Over Time')
@@ -45,23 +48,48 @@ def bubble_chart(hospital_data):
     st.plotly_chart(fig)
     st.write("This bubble chart shows the comparison between COVID-19 beds with admitted patients, colored by state and sized by hospitalized COVID-19 patients.")
 
-def scatter_plot(hospital_data):
-    X = hospital_data[['beds_covid']]
-    y = hospital_data['admitted_covid']
+def scatter_plot(hospital_data, cases_data):
+    # Merge the datasets on 'date' and 'state'
+    hospital_cases_data = pd.merge(hospital_data, cases_data, on=['date', 'state'])
+    
+    # Drop rows with NaN values in the relevant columns
+    hospital_cases_data = hospital_cases_data.dropna(subset=['cases_new', 'admitted_total'])
+    
+    # Independent variable (number of cases)
+    X = hospital_cases_data[['cases_new']]
+    # Dependent variable (number of hospital admissions)
+    y = hospital_cases_data['admitted_total']
+    
+    # Print shapes for debugging
+    print("X shape:", X.shape)
+    print("y shape:", y.shape)
+    
+    # Split the data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+    # Initialize and fit the model
     model = LinearRegression()
     model.fit(X_train, y_train)
+    
+    # Predict on the test set
     y_pred = model.predict(X_test)
+    
+    # Create the scatter plot with regression line
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=X_test['beds_covid'], y=y_test, mode='markers', name='Actual'))
-    fig.add_trace(go.Scatter(x=X_test['beds_covid'], y=y_pred, mode='lines', name='Predicted'))
-    fig.update_layout(title='Regression Analysis: Beds COVID vs. Admitted COVID',
-                      xaxis_title='Beds COVID',
-                      yaxis_title='Admitted COVID')
+    fig.add_trace(go.Scatter(x=X_test['cases_new'], y=y_test, mode='markers', name='Actual'))
+    fig.add_trace(go.Scatter(x=X_test['cases_new'], y=y_pred, mode='lines', name='Predicted'))
+    
+    # Update layout with titles and axis labels
+    fig.update_layout(title='Regression Analysis: New Cases vs. Hospital Admissions',
+                      xaxis_title='New COVID-19 Cases',
+                      yaxis_title='Total Hospital Admissions')
+    
+    # Display the plot in Streamlit
     st.plotly_chart(fig)
-    st.write("This scatter plot shows the relationship between the number of COVID-19 beds and the number of admitted COVID-19 patients.")
+    st.write("This scatter plot shows the relationship between the number of new COVID-19 cases and the number of hospital admissions.")
 
 def bar_chart(icu_data):
+    st.header("Feature Importance: ICU Data")
     X = icu_data[['beds_icu_covid', 'vent_covid']]
     y = icu_data['icu_covid']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
@@ -155,7 +183,7 @@ def main():
     st.title("Healthcare Facility Analysis in Malaysia (2020-2024)")
 
     # Load the data
-    hospital_data, icu_data = load_data()
+    hospital_data, icu_data, cases_data = load_data()
     
     # Sidebar for user input
     st.sidebar.title("Settings")
@@ -164,12 +192,13 @@ def main():
     state = st.sidebar.multiselect("Select State(s)", options=hospital_data['state'].unique(), default=hospital_data['state'].unique())
     
     # Preprocess the data
-    hospital_data, icu_data = preprocess_data(hospital_data, icu_data, start_year, end_year)
+    hospital_data, icu_data, cases_data = preprocess_data(hospital_data, icu_data, cases_data, start_year, end_year)
     
     # Filter by state
     if state:
         hospital_data = hospital_data[hospital_data['state'].isin(state)]
         icu_data = icu_data[icu_data['state'].isin(state)]
+        cases_data = cases_data[cases_data['state'].isin(state)]
     
     # Display the selected graphs
     st.sidebar.header("Graph Type")
@@ -181,8 +210,8 @@ def main():
         heatmap_plot(hospital_data, icu_data)
     elif graph_type == "Bubble Chart":
         bubble_chart(hospital_data)
-    elif graph_type == "Scatter Plot":
-        scatter_plot(hospital_data)
+    elif graph_type == "Scatter Plot)":
+        scatter_plot(hospital_data, cases_data)
     elif graph_type == "Bar Chart":
         bar_chart(icu_data)
 
