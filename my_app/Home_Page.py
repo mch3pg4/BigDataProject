@@ -19,7 +19,7 @@ def main():
     </style>""", unsafe_allow_html=True
     )
     # add a logo to the sidebar
-    st.logo('images/logo.png', icon_image='images/logo_full.png')
+    st.logo('images/logo_full.png', icon_image='images/logo.png')
 
     st.title('Welcome to MED ANALYTICS. 📊')
 
