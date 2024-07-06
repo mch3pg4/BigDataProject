@@ -39,13 +39,43 @@ def main():
 
     st.title('Welcome to MED ANALYTICS. 📊')
     st.write('''The MED ANALYTICS dashboard empowers users to navigate the challenges of 
-             COVID-19 through data-driven insights. This platform offersdata visualizations 
+             COVID-19 through data-driven insights. This platform offers data visualizations 
              on healthcare facilities, mental health, and vaccination efforts, providing a 
              comprehensive picture of the pandemic\'s impact. By leveraging machine learning,
               MED ANALYTICS aims to predict future trends and resource needs, supporting proactive decision-making.''')
 
     # COVID-19 at a Glance
     st.header('COVID-19 at a Glance')
+    st.caption('(as of 1st June 2024)')
+
+    # Three key metrics: Total cases, total deaths, and total recoveries
+    total_cases_metric = load_and_prepare_data(
+        'filtered_datasets/cases_state.csv', 'date')
+    total_death_metric = load_and_prepare_data(
+        'filtered_datasets/death_state.csv', 'date')
+    total_discharged_metric = load_and_prepare_data(
+        'filtered_datasets/hospital.csv', 'date')
+
+    # Calculate total cases
+    total_cases = total_cases_metric['cases_new'].sum()
+
+    # Calculate total deaths
+    total_deaths = total_death_metric[[
+        'deaths_unvax', 'deaths_pvax', 'deaths_fvax']].sum().sum()
+
+    # Calculate total recoveries (discharged patients)
+    total_recoveries = total_discharged_metric['discharged_total'].sum()
+
+    # Display the metrics in a row
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric(label='Total Cases', value=f"{total_cases:,}")
+    with col2:
+        st.metric(label='Total Deaths', value=f"{total_deaths:,}")
+    with col3:
+        st.metric(label='Total Recoveries', value=f"{total_recoveries:,}")
+
     st.subheader('COVID-19 Cases in Malaysia ')
     st.caption('(as of 1st June 2024)')
 
@@ -59,11 +89,52 @@ def main():
         'date')['cases_new'].sum().reset_index()
 
     # Create a line chart using Plotly
-    fig = px.line(total_cases_by_date, x='date', y='cases_new',
-                  title='COVID-19 Cases Over Time in Malaysia')
+    fig_total_cases = px.line(total_cases_by_date, x='date', y='cases_new',
+                              title='COVID-19 Cases Over Time in Malaysia')
+    fig_total_cases.update_layout(
+        xaxis_title='Date', yaxis_title='New Cases')
 
-    # Display the Plotly chart in Streamlit
-    st.plotly_chart(fig)
+    st.plotly_chart(fig_total_cases)
+    # show the map of malaysia with covid cases
+    # Load daily COVID-19 cases data
+    covid_cases = pd.read_csv('filtered_datasets/cases_state.csv')
+    covid_cases['date'] = pd.to_datetime(covid_cases['date'])
+
+    # Aggregate data from daily to monthly
+    covid_cases['month'] = covid_cases['date'].dt.to_period('M')
+    covid_cases_monthly = covid_cases.groupby(['month', 'state'])[
+        'cases_new'].sum().reset_index()
+    covid_cases_monthly['month'] = covid_cases_monthly['month'].dt.to_timestamp()
+
+    # Read GeoJSON data for Malaysian states
+    with open('my_app/map_json/malaysia.geojson') as response:
+        malaysia_geojson = json.load(response)
+
+    # Function to format date for display
+    covid_cases_monthly['month'] = covid_cases_monthly['month'].dt.strftime(
+        '%Y-%m')
+
+    # Create a choropleth map using Plotly
+    fig_covid_map = px.choropleth_mapbox(
+        covid_cases_monthly,
+        geojson=malaysia_geojson,
+        locations='state',
+        color='cases_new',
+        color_continuous_scale="reds",
+        featureidkey="properties.name",
+        animation_frame='month',
+        range_color=[0, covid_cases_monthly['cases_new'].quantile(0.98)],
+        mapbox_style="carto-positron",
+        zoom=4.38,
+        center={"lat": 4, "lon": 109.5},
+        opacity=0.75,
+        labels={'cases_new': 'New Cases'},
+    )
+
+    fig_covid_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+
+    # Display the COVID map
+    st.plotly_chart(fig_covid_map)
 
     # Pie chart of covid cases by age group and state
     # Load the COVID-19 cases data
@@ -82,10 +153,11 @@ def main():
     cases_df = pd.DataFrame(list(total_cases.items()), columns=[
                             'Age Group', 'Total Cases'])
 
-    # Create the pie chart using Plotly
-    fig_age_group = px.pie(cases_df, values='Total Cases', names='Age Group',
-                           title='Overall COVID-19 Cases by Age Group',
-                           color_discrete_sequence=px.colors.qualitative.Set3)
+    # Create the pie chart for age group
+    fig_pie_age_group = px.pie(cases_df, values='Total Cases', names='Age Group',
+                               title='Overall COVID-19 Cases by Age Group',
+                               color_discrete_sequence=px.colors.qualitative.Set3)
+    fig_pie_age_group.update_layout(legend_title_text='Age Group')
 
     # Filter the data to include only the specified states
     filtered_cases_data = cases_data[cases_data['state'].isin(states)]
@@ -94,10 +166,11 @@ def main():
     total_cases_by_state = filtered_cases_data.groupby(
         'state')['cases_new'].sum().reset_index()
 
-    # Create the pie chart using Plotly
-    fig_state = px.pie(total_cases_by_state, values='cases_new', names='state',
-                       title='Overall COVID-19 Cases by State',
-                       color_discrete_sequence=px.colors.qualitative.Set3)
+    # Create the pie chart for states
+    fig_pie_state = px.pie(total_cases_by_state, values='cases_new', names='state',
+                           title='Overall COVID-19 Cases by State',
+                           color_discrete_sequence=px.colors.qualitative.Set3)
+    fig_pie_state.update_layout(legend_title_text='State')
 
     # Create columns to place the charts side by side
     col1, col2 = st.columns(2)
@@ -105,50 +178,12 @@ def main():
     with col1:
         st.subheader('Distribution of COVID-19 Cases by Age Group')
         st.caption('(as of 1st June 2024)')
-        st.plotly_chart(fig_age_group, use_container_width=True)
+        st.plotly_chart(fig_pie_age_group, use_container_width=True)
 
     with col2:
         st.subheader('Distribution of COVID-19 Cases by State')
         st.caption('(as of 1st June 2024)')
-        st.plotly_chart(fig_state, use_container_width=True)
-
-    # show the map of malaysia with covid cases
-    # Read GeoJSON data for Malaysian states
-    with open('my_app/map_json/malaysia.geojson') as response:
-        malaysia_geojson = json.load(response)
-
-    # Aggregate data from daily to monthly
-    covid_cases_monthly = covid_cases.groupby(
-        pd.Grouper(key='date', freq='ME')).sum().reset_index()
-
-    # Group by month and state to get total cases for each state in each month
-    grouped_cases = covid_cases_monthly.groupby(
-        ['date', 'state'])['cases_new'].sum().reset_index()
-
-    # Function to format date for display
-    grouped_cases['date'] = grouped_cases['date'].dt.strftime('%Y-%m')
-
-    # Create a choropleth map using Plotly
-    fig_map = px.choropleth_mapbox(grouped_cases,
-                                   geojson=malaysia_geojson,
-                                   locations='state',
-                                   color='cases_new',
-                                   color_continuous_scale="reds",
-                                   featureidkey="properties.name",
-                                   animation_frame='date',
-                                   range_color=[
-                                       0, grouped_cases['cases_new'].quantile(0.98)],
-                                   mapbox_style="carto-positron",
-                                   zoom=4,
-                                   center={"lat": 4, "lon": 109.5},
-                                   opacity=0.5,
-                                   labels={'cases_new': 'New Cases'},
-                                   )
-
-    fig_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-
-    # Display the Plotly map in Streamlit
-    st.plotly_chart(fig_map)
+        st.plotly_chart(fig_pie_state, use_container_width=True)
 
     # Vaccination Progress
     st.header('Vaccination Progress')
@@ -160,21 +195,20 @@ def main():
         'filtered_datasets/vax_state.csv', 'date')
 
     # Line chart of vaccination progress over time
-    # Create the line chart using Plotly
-    fig_line = px.line(vaccination_data, x='date', y=['daily_partial', 'daily_full', 'daily_booster'],
-                       labels={'value': 'Number of Doses', 'date': 'Date'},
-                       title='COVID-19 Vaccination Progress Over Time')
+    fig_line_vax = px.line(vaccination_data, x='date', y=['daily_partial', 'daily_full', 'daily_booster'],
+                           labels={'value': 'Number of Doses', 'date': 'Date'},
+                           title='COVID-19 Vaccination Progress Over Time')
 
     # Update the legend and layout
-    fig_line.update_layout(legend_title_text='Dose Type')
-    fig_line.for_each_trace(lambda t: t.update(name={
+    fig_line_vax.update_layout(legend_title_text='Dose Type')
+    fig_line_vax.for_each_trace(lambda t: t.update(name={
         'daily_partial': 'First Dose',
         'daily_full': 'Second Dose',
         'daily_booster': 'Booster Dose'
     }[t.name]))
 
     # Bar chart of vaccination progress by state
-    # Filter the data to include only the specified states
+    # Filter the data to include only states
     filtered_vaccination_data = vaccination_data[vaccination_data['state'].isin(
         states)]
 
@@ -187,18 +221,25 @@ def main():
                                                        var_name='Vaccination Type', value_name='Total Vaccinations')
 
     # Create the stacked bar chart using Plotly
-    fig_bar = px.bar(vaccination_melted, x='state', y='Total Vaccinations', color='Vaccination Type', barmode='stack',
-                     title='Cumulative Vaccinations by State',
-                     labels={'state': 'State', 'Total Vaccinations': 'Total Vaccinations'})
+    fig_bar_vax = px.bar(vaccination_melted, x='state', y='Total Vaccinations', color='Vaccination Type', barmode='stack',
+                         title='Cumulative Vaccinations by State',
+                         labels={'state': 'State', 'Total Vaccinations': 'Total Vaccinations'})
+
+    fig_bar_vax.for_each_trace(lambda t: t.update(name={
+        'cumul_partial': 'First Dose',
+        'cumul_full': 'Second Dose',
+        'cumul_booster': 'Booster Dose',
+        'cumul_booster2': 'Second Booster Dose'
+    }[t.name]))
 
     # Display the charts side by side
     col1, col2 = st.columns(2)
 
     with col1:
-        st.plotly_chart(fig_line, use_container_width=False)
+        st.plotly_chart(fig_line_vax, use_container_width=False)
 
     with col2:
-        st.plotly_chart(fig_bar, use_container_width=False)
+        st.plotly_chart(fig_bar_vax, use_container_width=False)
 
     # Healthcare Facilities
     st.header('Healthcare Facilities')
@@ -219,7 +260,18 @@ def main():
                                                                         'discharged_pui', 'discharged_total'],
                             labels={'value': 'Number of Patients',
                                     'date': 'Date'},
-                            title='Hospitalization Trends Over Time')
+                            title='Hospitalization Trends Over Time',
+                            )
+
+    fig_line_hosp.update_layout(legend_title_text='Patient Type')
+    fig_line_hosp.for_each_trace(lambda t: t.update(name={
+        'admitted_covid': 'Admitted COVID-19 Patients',
+        'admitted_pui': 'Admitted PUI Patients',
+        'admitted_total': 'Total Admitted Patients',
+        'discharged_covid': 'Discharged COVID-19 Patients',
+        'discharged_pui': 'Discharged PUI Patients',
+        'discharged_total': 'Total Discharged Patients'
+    }[t.name]))
 
     # Stacked Bar Chart: Distribution of beds allocated to COVID-19 and non-COVID-19 patients
     state_beds_totals = filtered_hospitalization_data.groupby(
@@ -229,6 +281,12 @@ def main():
     fig_bar_hosp = px.bar(beds_melted, x='state', y='Total Beds', color='Bed Type', barmode='stack',
                           title='Distribution of Beds by State',
                           labels={'state': 'State', 'Total Beds': 'Total Beds'})
+
+    fig_bar_hosp.for_each_trace(lambda t: t.update(name={
+        'beds': 'Total Beds',
+        'beds_covid': 'Beds for COVID-19 Patients',
+        'beds_noncrit': 'Beds for Non-COVID-19 Patients'
+    }[t.name]))
 
     col1, col2 = st.columns(2)
     with col1:
@@ -251,48 +309,51 @@ def main():
     icu_data_grouped = icu_data.groupby('state')[
         ['icu_covid', 'icu_noncovid', 'vent_covid', 'vent_noncovid']].sum().reset_index()
 
-    fig_stacked_bar = px.bar(icu_data_grouped, x='state', y=['icu_covid', 'icu_noncovid', 'vent_covid', 'vent_noncovid'],
-                             labels={'value': 'Count', 'state': 'State'},
-                             title='Distribution of ICU Beds and Ventilators Used by State',
-                             barmode='stack')
+    fig_stacked_bar_icu = px.bar(icu_data_grouped, x='state', y=['icu_covid', 'icu_noncovid', 'vent_covid', 'vent_noncovid'],
+                                 labels={'value': 'Count', 'state': 'State'},
+                                 title='Distribution of ICU Beds and Ventilators Used by State',
+                                 barmode='stack')
 
-    fig_stacked_bar.update_layout(legend_title_text='Resource Type')
+    fig_stacked_bar_icu.update_layout(legend_title_text='Resource Type')
+    fig_stacked_bar_icu.for_each_trace(lambda t: t.update(name={
+        'icu_covid': 'ICU for COVID-19',
+        'icu_noncovid': 'ICU for Non-COVID-19',
+        'vent_covid': 'Ventilators for COVID-19',
+        'vent_noncovid': 'Ventilators for Non-COVID-19'
+    }[t.name]))
 
     # Load the ICU data
-    icu_data = pd.read_csv('filtered_datasets/icu.csv')
-
-    # Ensure the date column is in datetime format
-    icu_data['date'] = pd.to_datetime(icu_data['date'])
+    icu_data = load_and_prepare_data('filtered_datasets/icu.csv', 'date')
 
     # Melt the data for ICU and ventilator usage
     icu_melted = icu_data.melt(id_vars='date', value_vars=['icu_covid', 'icu_noncovid', 'vent_covid', 'vent_noncovid'],
                                var_name='Resource Type', value_name='Count')
 
-    # Define a function to categorize resource types for better readability
+    # Function to categorize resource types
     def categorize_resource(resource):
         if resource == 'icu_covid':
-            return 'ICU for COVID'
+            return 'ICU for COVID-19'
         elif resource == 'icu_noncovid':
-            return 'ICU for Non-COVID'
+            return 'ICU for Non-COVID-19'
         elif resource == 'vent_covid':
-            return 'Ventilators for COVID'
+            return 'Ventilators for COVID-19'
         elif resource == 'vent_noncovid':
-            return 'Ventilators for Non-COVID'
+            return 'Ventilators for Non-COVID-19'
 
     icu_melted['Resource Type'] = icu_melted['Resource Type'].apply(
         categorize_resource)
 
     # Create an animated pie chart using Plotly
-    fig_pie = px.pie(icu_melted, values='Count', names='Resource Type',
-                     title='Proportion of ICU Beds and Ventilators Used Over Time',
-                     color_discrete_sequence=px.colors.qualitative.Set3,
-                     labels={'Count': 'Number of Resources'})
+    fig_pie_icu = px.pie(icu_melted, values='Count', names='Resource Type',
+                         title='Proportion of ICU Beds and Ventilators Used Over Time',
+                         color_discrete_sequence=px.colors.qualitative.Set3,
+                         labels={'Count': 'Number of Resources'})
 
     col1, col2 = st.columns(2)
     with col1:
-        st.plotly_chart(fig_stacked_bar)
+        st.plotly_chart(fig_stacked_bar_icu)
     with col2:
-        st.plotly_chart(fig_pie)
+        st.plotly_chart(fig_pie_icu)
 
     # Select topic buttons
     st.subheader('Select a topic')
