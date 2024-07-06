@@ -3,9 +3,14 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import base64
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import mean_squared_error
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import RandomizedSearchCV
+from scipy.stats import randint
 
 def load_data():
     # Load the data
@@ -51,38 +56,50 @@ def bubble_chart(hospital_data):
     st.plotly_chart(fig)
     st.write("This bubble chart shows the comparison between COVID-19 beds with admitted patients, colored by state and sized by hospitalized COVID-19 patients.")
 
+def histogram(hospital_data):
+    fig = px.histogram(hospital_data, x='hosp_covid', nbins=50, title='Distribution of Hospitalized COVID-19 Patients')
+    st.plotly_chart(fig)
+    st.write("This histogram shows the distribution of hospitalized COVID-19 patients.")
+
+def pie_chart(hospital_data):
+    latest_data = hospital_data[hospital_data['date'] == hospital_data['date'].max()]
+    fig = px.pie(latest_data, values='beds_covid', names='state', title='Distribution of COVID-19 Beds by State')
+    st.plotly_chart(fig)
+    st.write("This pie chart shows the distribution of COVID-19 beds by state for the latest date available in the dataset.")
+
 def scatter_plot(hospital_data, cases_data):
-    # Merge the datasets on 'date' and 'state'
     hospital_cases_data = pd.merge(hospital_data, cases_data, on=['date', 'state'])
-    
-    # Drop rows with NaN values in the relevant columns
     hospital_cases_data = hospital_cases_data.dropna(subset=['cases_new', 'admitted_total'])
     
-    # Independent variable (number of cases)
     X = hospital_cases_data[['cases_new']]
-    # Dependent variable (number of hospital admissions)
     y = hospital_cases_data['admitted_total']
     
-    # Print shapes for debugging
-    print("X shape:", X.shape)
-    print("y shape:", y.shape)
-    
-    # Split the data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
     
-    # Initialize and fit the model
-    model = LinearRegression()
-    model.fit(X_train, y_train)
+    # Set up the pipeline with scaling and regression
+    pipeline = Pipeline([
+        ('scaler', StandardScaler()),
+        ('regressor', LinearRegression())
+    ])
     
-    # Predict on the test set
-    y_pred = model.predict(X_test)
+    # Set up the parameter grid for GridSearchCV
+    param_grid = {
+        'regressor__fit_intercept': [True, False]
+    }
     
-    # Create the scatter plot with regression line
+    grid_search = GridSearchCV(pipeline, param_grid, cv=5, n_jobs=-1, verbose=2)
+    grid_search.fit(X_train, y_train)
+    
+    best_model = grid_search.best_estimator_
+    y_pred = best_model.predict(X_test)
+    
+    st.write(f"Best parameters found: {grid_search.best_params_}")
+    st.write(f"Mean Squared Error: {mean_squared_error(y_test, y_pred)}")
+    
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=X_test['cases_new'], y=y_test, mode='markers', name='Actual'))
-    fig.add_trace(go.Scatter(x=X_test['cases_new'], y=y_pred, mode='lines', name='Predicted'))
+    fig.add_trace(go.Scatter(x=X_test['cases_new'], y=y_pred, mode='lines', name='Predicted', line=dict(dash='dash')))
     
-    # Update layout with titles and axis labels
     fig.update_layout(title='Regression Analysis: New Cases vs. Hospital Admissions',
                       xaxis_title='New COVID-19 Cases',
                       yaxis_title='Total Hospital Admissions')
@@ -95,14 +112,35 @@ def bar_chart(icu_data):
     X = icu_data[['beds_icu_covid', 'vent_covid']]
     y = icu_data['icu_covid']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+    # Initialize the RandomForestRegressor
     model = RandomForestRegressor(random_state=42)
-    model.fit(X_train, y_train)
-    feature_importances = model.feature_importances_
+    
+    # Set up a simplified parameter grid for GridSearchCV
+    param_grid = {
+        'n_estimators': [100, 200],  # Reduced range
+        'max_depth': [None, 10],     # Reduced range
+        'min_samples_split': [2, 5], # Reduced range
+        'min_samples_leaf': [1, 2]   # Reduced range
+    }
+    
+    # Use RandomizedSearchCV for efficiency
+    grid_search = GridSearchCV(model, param_grid, cv=3, n_jobs=-1, verbose=1) # Reduced cv folds
+    grid_search.fit(X_train, y_train)
+    
+    best_model = grid_search.best_estimator_
+    y_pred = best_model.predict(X_test)
+    
+    st.write(f"Best parameters found: {grid_search.best_params_}")
+    st.write(f"Mean Squared Error: {mean_squared_error(y_test, y_pred)}")
+    
+    feature_importances = best_model.feature_importances_
     features = X.columns
     fig = go.Figure([go.Bar(x=features, y=feature_importances)])
     fig.update_layout(title='Feature Importance for ICU Data',
                       xaxis_title='Features',
                       yaxis_title='Importance')
+    
     st.plotly_chart(fig)
     st.write("This bar chart shows the importance of different features in predicting the number of ICU COVID-19 patients.")
 
@@ -204,6 +242,12 @@ def main():
     st.subheader("COVID-19 Beds vs Admitted Patients")
     bubble_chart(hospital_data)
     
+    st.subheader("Distribution of Hospitalized COVID-19 Patients")
+    histogram(hospital_data)
+
+    st.subheader("Distribution of COVID-19 Beds by State")
+    pie_chart(hospital_data)
+
     st.subheader("Regression Analysis: New Cases vs. Hospital Admissions")
     scatter_plot(hospital_data, cases_data)
     
