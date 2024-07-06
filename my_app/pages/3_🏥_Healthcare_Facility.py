@@ -7,10 +7,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import mean_squared_error
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import RandomizedSearchCV
-from scipy.stats import randint
 
 def load_data():
     # Load the data
@@ -34,39 +31,26 @@ def preprocess_data(hospital_data, icu_data, cases_data, start_year=2020, end_ye
     return hospital_data, icu_data, cases_data
 
 def line_graph(hospital_data):
-    fig = px.line(hospital_data, x='date', y='beds_covid',
-                  title='COVID-19 Beds Over Time')
+    fig = px.line(hospital_data, x='date', y='beds_covid')
     st.plotly_chart(fig)
     st.write("This line graph shows the number of COVID-19 beds over time.")
 
 def pie_chart_patients(hospital_data):
     latest_data = hospital_data[hospital_data['date'] == hospital_data['date'].max()]
-    fig = px.pie(latest_data, values='hosp_covid', names='state', title='Distribution of Hospitalized COVID-19 Patients by State')
+    fig = px.pie(latest_data, values='hosp_covid', names='state')
     st.plotly_chart(fig)
     st.write("This pie chart shows the distribution of hospitalized COVID-19 patients by state for the latest date available in the dataset.")
 
 def pie_chart_beds(hospital_data):
     latest_data = hospital_data[hospital_data['date'] == hospital_data['date'].max()]
-    fig = px.pie(latest_data, values='beds_covid', names='state', title='Distribution of COVID-19 Beds by State')
+    fig = px.pie(latest_data, values='beds_covid', names='state')
     st.plotly_chart(fig)
     st.write("This pie chart shows the distribution of COVID-19 beds by state for the latest date available in the dataset.")
 
 def bubble_chart(hospital_data):
-    fig = px.scatter(hospital_data, x='beds_covid', y='admitted_covid', size='hosp_covid', color='state',
-                     title='COVID-19 Beds vs Admitted Patients', labels={'hosp_covid': 'Hospitalized COVID-19'})
+    fig = px.scatter(hospital_data, x='beds_covid', y='admitted_covid', size='hosp_covid', color='state', labels={'hosp_covid': 'Hospitalized COVID-19'})
     st.plotly_chart(fig)
     st.write("This bubble chart shows the comparison between COVID-19 beds with admitted patients, colored by state and sized by hospitalized COVID-19 patients.")
-
-def heatmap_plot(hospital_data, icu_data):
-    combined_data = pd.merge(hospital_data, icu_data, on=['date', 'state'])
-    # Ensure only numeric columns are included
-    numeric_columns = combined_data.select_dtypes(
-        include=['float64', 'int64']).columns
-    correlation_matrix = combined_data[numeric_columns].corr()
-    fig = px.imshow(correlation_matrix, text_auto=True, aspect="auto",
-                    color_continuous_scale='RdBu_r', title='Correlation Matrix')
-    st.plotly_chart(fig)
-    st.write("This heatmap plot shows a heatmap showing the correlation matrix between numeric columns from combined hospital and ICU data.")
 
 def scatter_plot(hospital_data, cases_data):
     hospital_cases_data = pd.merge(hospital_data, cases_data, on=['date', 'state'])
@@ -98,13 +82,48 @@ def scatter_plot(hospital_data, cases_data):
     fig.add_trace(go.Scatter(x=X_test['cases_new'], y=y_test, mode='markers', name='Actual'))
     fig.add_trace(go.Scatter(x=X_test['cases_new'], y=y_pred, mode='lines', name='Predicted', line=dict(dash='dash')))
     
-    fig.update_layout(title='Regression Analysis: New Cases vs. Hospital Admissions',
-                      xaxis_title='New COVID-19 Cases',
+    fig.update_layout(xaxis_title='New COVID-19 Cases',
                       yaxis_title='Total Hospital Admissions')
     
     # Display the plot in Streamlit
     st.plotly_chart(fig)
     st.write("This scatter plot shows the relationship between the number of new COVID-19 cases and the number of hospital admissions.")
+
+def heatmap_plot(hospital_data, icu_data):
+    combined_data = pd.merge(hospital_data, icu_data, on=['date', 'state'])
+    # Ensure only numeric columns are included
+    numeric_columns = combined_data.select_dtypes(
+        include=['float64', 'int64']).columns
+    correlation_matrix = combined_data[numeric_columns].corr()
+    fig = px.imshow(correlation_matrix, text_auto=True, aspect="auto",
+                    color_continuous_scale='RdBu_r', title='Correlation Matrix')
+    st.plotly_chart(fig)
+    st.write("This heatmap plot shows a heatmap showing the correlation matrix between numeric columns from combined hospital and ICU data.")
+
+def icu_availability_chart(icu_data):
+    fig = px.line(icu_data, x='date', y=['beds_icu', 'vent'],
+                  labels={'value': 'Number Available', 'date': 'Date'})
+    fig.update_layout(legend_title_text='Metrics')
+    st.plotly_chart(fig)
+    st.write("This line chart shows the availability of ICU beds and ventilators over time.")
+
+def monthly_icu_usage_chart(icu_data):
+    # Convert the 'date' column to string format for compatibility with Plotly
+    icu_data['month'] = icu_data['date'].dt.to_period('M').astype(str)
+    
+    # Aggregate data by month
+    monthly_usage = icu_data.groupby('month').agg({
+        'beds_icu': 'sum',
+        'vent': 'sum',
+        'icu_covid': 'sum'
+    }).reset_index()
+    
+    fig = px.bar(monthly_usage, x='month', y=['beds_icu', 'vent'],
+                 labels={'value': 'Number Used', 'month': 'Month'})
+    fig.update_layout(barmode='stack')
+    
+    st.plotly_chart(fig)
+    st.write("This bar chart shows the total monthly usage of ICU beds and ventilators.")
 
 def bar_chart(icu_data):
     X = icu_data[['beds_icu_covid', 'vent_covid']]
@@ -132,8 +151,7 @@ def bar_chart(icu_data):
     feature_importances = best_model.feature_importances_
     features = X.columns
     fig = go.Figure([go.Bar(x=features, y=feature_importances)])
-    fig.update_layout(title='Feature Importance for ICU Data',
-                      xaxis_title='Features',
+    fig.update_layout(xaxis_title='Features',
                       yaxis_title='Importance')
     
     st.plotly_chart(fig)
@@ -158,7 +176,7 @@ def main():
     # add a logo to the sidebar
     st.logo('images/logo_full.png', icon_image='images/logo.png')
 
-    st.title("🏥 Healthcare Facility Analysis in Malaysia (2020-2024)")
+    st.title("🏥 Healthcare Facility Analysis in Malaysia")
 
     # Load the data
     hospital_data, icu_data, cases_data = load_data()
@@ -180,7 +198,8 @@ def main():
     
    # Layout the graphs in a vertical manner
     st.header("Graphs")
-
+    st.write("These are the graphs that relevant to the healthcare facility such as the usage of hospital beds, ICU and ventilators during pandemic Covid-19 in Malaysia from March 24th, 2020 until June 1st, 2024.")
+    
     st.subheader("COVID-19 Beds Over Time")
     line_graph(hospital_data)
     
@@ -191,17 +210,22 @@ def main():
     pie_chart_patients(hospital_data)
 
     st.subheader("COVID-19 Beds vs Admitted Patients")
-    bubble_chart(hospital_data)
+    bubble_chart(hospital_data) 
+    
+    st.subheader("Regression Analysis: New Cases vs. Hospital Admissions")
+    scatter_plot(hospital_data, cases_data)
     
     st.subheader("Heatmap of Hospital and ICU Data")
     heatmap_plot(hospital_data, icu_data)
 
-    st.subheader("Regression Analysis: New Cases vs. Hospital Admissions")
-    scatter_plot(hospital_data, cases_data)
+    st.subheader("ICU Bed and Ventilator Availability Over Time")
+    icu_availability_chart(icu_data)
+
+    st.subheader("Monthly ICU Bed and Ventilator Usage")
+    monthly_icu_usage_chart(icu_data)
     
     st.subheader("Feature Importance for ICU Data")
     bar_chart(icu_data)
-
 
     # Load the hospitalization data
     hospitalization_data = pd.read_csv('filtered_datasets/hospital.csv')
