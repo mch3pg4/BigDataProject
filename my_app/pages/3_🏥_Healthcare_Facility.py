@@ -39,6 +39,24 @@ def line_graph(hospital_data):
     st.plotly_chart(fig)
     st.write("This line graph shows the number of COVID-19 beds over time.")
 
+def pie_chart_patients(hospital_data):
+    latest_data = hospital_data[hospital_data['date'] == hospital_data['date'].max()]
+    fig = px.pie(latest_data, values='hosp_covid', names='state', title='Distribution of Hospitalized COVID-19 Patients by State')
+    st.plotly_chart(fig)
+    st.write("This pie chart shows the distribution of hospitalized COVID-19 patients by state for the latest date available in the dataset.")
+
+def pie_chart_beds(hospital_data):
+    latest_data = hospital_data[hospital_data['date'] == hospital_data['date'].max()]
+    fig = px.pie(latest_data, values='beds_covid', names='state', title='Distribution of COVID-19 Beds by State')
+    st.plotly_chart(fig)
+    st.write("This pie chart shows the distribution of COVID-19 beds by state for the latest date available in the dataset.")
+
+def bubble_chart(hospital_data):
+    fig = px.scatter(hospital_data, x='beds_covid', y='admitted_covid', size='hosp_covid', color='state',
+                     title='COVID-19 Beds vs Admitted Patients', labels={'hosp_covid': 'Hospitalized COVID-19'})
+    st.plotly_chart(fig)
+    st.write("This bubble chart shows the comparison between COVID-19 beds with admitted patients, colored by state and sized by hospitalized COVID-19 patients.")
+
 def heatmap_plot(hospital_data, icu_data):
     combined_data = pd.merge(hospital_data, icu_data, on=['date', 'state'])
     # Ensure only numeric columns are included
@@ -49,23 +67,6 @@ def heatmap_plot(hospital_data, icu_data):
                     color_continuous_scale='RdBu_r', title='Correlation Matrix')
     st.plotly_chart(fig)
     st.write("This heatmap plot shows a heatmap showing the correlation matrix between numeric columns from combined hospital and ICU data.")
-
-def bubble_chart(hospital_data):
-    fig = px.scatter(hospital_data, x='beds_covid', y='admitted_covid', size='hosp_covid', color='state',
-                     title='COVID-19 Beds vs Admitted Patients', labels={'hosp_covid': 'Hospitalized COVID-19'})
-    st.plotly_chart(fig)
-    st.write("This bubble chart shows the comparison between COVID-19 beds with admitted patients, colored by state and sized by hospitalized COVID-19 patients.")
-
-def histogram(hospital_data):
-    fig = px.histogram(hospital_data, x='hosp_covid', nbins=50, title='Distribution of Hospitalized COVID-19 Patients')
-    st.plotly_chart(fig)
-    st.write("This histogram shows the distribution of hospitalized COVID-19 patients.")
-
-def pie_chart(hospital_data):
-    latest_data = hospital_data[hospital_data['date'] == hospital_data['date'].max()]
-    fig = px.pie(latest_data, values='beds_covid', names='state', title='Distribution of COVID-19 Beds by State')
-    st.plotly_chart(fig)
-    st.write("This pie chart shows the distribution of COVID-19 beds by state for the latest date available in the dataset.")
 
 def scatter_plot(hospital_data, cases_data):
     hospital_cases_data = pd.merge(hospital_data, cases_data, on=['date', 'state'])
@@ -92,9 +93,6 @@ def scatter_plot(hospital_data, cases_data):
     
     best_model = grid_search.best_estimator_
     y_pred = best_model.predict(X_test)
-    
-    st.write(f"Best parameters found: {grid_search.best_params_}")
-    st.write(f"Mean Squared Error: {mean_squared_error(y_test, y_pred)}")
     
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=X_test['cases_new'], y=y_test, mode='markers', name='Actual'))
@@ -130,9 +128,6 @@ def bar_chart(icu_data):
     
     best_model = grid_search.best_estimator_
     y_pred = best_model.predict(X_test)
-    
-    st.write(f"Best parameters found: {grid_search.best_params_}")
-    st.write(f"Mean Squared Error: {mean_squared_error(y_test, y_pred)}")
     
     feature_importances = best_model.feature_importances_
     features = X.columns
@@ -189,17 +184,17 @@ def main():
     st.subheader("COVID-19 Beds Over Time")
     line_graph(hospital_data)
     
-    st.subheader("Heatmap of Hospital and ICU Data")
-    heatmap_plot(hospital_data, icu_data)
+    st.subheader("Distribution of COVID-19 Beds by State")
+    pie_chart_beds(hospital_data)
+    
+    st.subheader("Distribution of Hospitalized COVID-19 Patients by State")
+    pie_chart_patients(hospital_data)
 
     st.subheader("COVID-19 Beds vs Admitted Patients")
     bubble_chart(hospital_data)
     
-    st.subheader("Distribution of Hospitalized COVID-19 Patients")
-    histogram(hospital_data)
-
-    st.subheader("Distribution of COVID-19 Beds by State")
-    pie_chart(hospital_data)
+    st.subheader("Heatmap of Hospital and ICU Data")
+    heatmap_plot(hospital_data, icu_data)
 
     st.subheader("Regression Analysis: New Cases vs. Hospital Admissions")
     scatter_plot(hospital_data, cases_data)
@@ -217,6 +212,9 @@ def main():
     # Extract the year from the date
     hospitalization_data['year'] = hospitalization_data['date'].dt.year
 
+    # Line Chart: Trends over time for admitted vs. discharged patients
+    st.subheader('Admitted vs. Discharged Patients Over Time')
+
     # Create a year slider
     min_year = hospitalization_data['year'].min()
     max_year = hospitalization_data['year'].max()
@@ -227,8 +225,6 @@ def main():
     filtered_data = hospitalization_data[(hospitalization_data['year'] >= selected_year[0]) & (
         hospitalization_data['year'] <= selected_year[1])]
 
-    # Line Chart: Trends over time for admitted vs. discharged patients
-    st.subheader('Admitted vs. Discharged Patients Over Time')
     fig_line = px.line(filtered_data, x='date', y=['admitted_total', 'discharged_total'],
                        labels={'value': 'Number of Patients', 'date': 'Date'},
                        title='Admitted vs. Discharged Patients Over Time')
@@ -240,7 +236,6 @@ def main():
     }[t.name]))
 
     st.plotly_chart(fig_line)
-
 
 if __name__ == "__main__":
     main()
