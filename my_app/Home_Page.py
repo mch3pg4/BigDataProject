@@ -41,10 +41,11 @@ def main():
     with st.sidebar:
         st.write('What\'s on this page?')
         st.markdown('''
+        - [Welcome](#ffe148da)
         - [COVID-19 at a Glance](#covid-19-at-a-glance)
         - [Vaccination Progress](#vaccination-progress)
         - [Healthcare Facilities](#healthcare-facilities)
-        - [Deaths and Recoveries](#deaths-and-recoveries)
+        - [Deaths](#deaths)
         - [Select a topic](#select-a-topic)
         ''')
 
@@ -71,14 +72,15 @@ def main():
     vax_data = load_and_prepare_data('filtered_datasets/vax_state.csv', 'date')
 
     # Three key metrics: Total cases, total deaths, and total recoveries
-    # Calculate total cases, deaths and recoveries
+    # Calculate total cases, deaths, recoveries and vaccinations
     total_cases = cases_data['cases_new'].sum()
     total_deaths = death_data[[
         'deaths_unvax', 'deaths_pvax', 'deaths_fvax']].sum().sum()
     total_recoveries = hospital_data['discharged_total'].sum()
+    total_vaccinations = vax_data['cumul_full'].max()
 
     # Display the metrics in a row
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         st.metric(label='Total Cases', value=f"{total_cases:,}")
@@ -86,6 +88,9 @@ def main():
         st.metric(label='Total Deaths', value=f"{total_deaths:,}")
     with col3:
         st.metric(label='Total Recoveries', value=f"{total_recoveries:,}")
+    with col4:
+        st.metric(label='Total Vaccinations (2 doses)',
+                  value=f"{total_vaccinations:,}")
 
     st.subheader('COVID-19 Cases in Malaysia ')
     st.caption('(as of 1st June 2024)')
@@ -361,10 +366,58 @@ def main():
     with col2:
         st.plotly_chart(fig_pie_icu)
 
-    # Deaths and Recoveries
-    st.header('Deaths and Recoveries')
-    st.subheader('Deaths and Recoveries in Malaysia during COVID-19')
+    # Deaths
+    st.header('Deaths')
+    st.subheader('Deaths in Malaysia during COVID-19')
     st.caption('(as of 1st June 2024)')
+
+    st.write('''The following visualizations provide insights into the COVID-19 deaths in Malaysia,
+                including the distribution of deaths by vaccination status and state.''')
+
+    # pie chart to show distribution of deaths by vaccination status
+    # Calculate the total deaths for each vaccination status
+    total_deaths = {
+        'Unvaccinated': death_data['deaths_unvax'].sum(),
+        'Partially Vaccinated': death_data['deaths_pvax'].sum(),
+        'Fully Vaccinated': death_data['deaths_fvax'].sum()
+    }
+
+    # Create a DataFrame for the pie chart
+    deaths_df = pd.DataFrame(list(total_deaths.items()), columns=[
+        'Vaccination Status', 'Total Deaths'])
+
+    # Create the pie chart for deaths by vaccination status
+    fig_pie_deaths = px.pie(deaths_df, values='Total Deaths', names='Vaccination Status',
+                            title='COVID-19 Deaths by Vaccination Status',
+                            color_discrete_sequence=px.colors.sequential.RdBu)
+    fig_pie_deaths.update_layout(legend_title_text='Vaccination Status')
+
+    # covid deaths by state
+    # Filter the data to include only the specified states
+    filtered_death_data = death_data[death_data['state'].isin(states)]
+
+    # Calculate the total deaths for each state
+    filtered_death_data['deaths_total'] = filtered_death_data[[
+        'deaths_unvax', 'deaths_pvax', 'deaths_fvax', 'deaths_boost']].sum(axis=1)
+    total_deaths_by_state = filtered_death_data.groupby(
+        'state')['deaths_total'].sum().reset_index()
+
+    # Create the pie chart for states
+    fig_pie_deaths_state = px.pie(total_deaths_by_state, values='deaths_total', names='state',
+                                  title='COVID-19 Deaths by State',
+                                  color_discrete_sequence=px.colors.qualitative.Set3,
+                                  labels={'state': 'State', 'deaths_total': 'Total Deaths'})
+    fig_pie_deaths_state.update_layout(legend_title_text='State')
+
+    # display pie charts side by side
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader('Distribution of COVID-19 Deaths by Vaccination Status')
+        st.plotly_chart(fig_pie_deaths, use_container_width=True)
+
+    with col2:
+        st.subheader('Distribution of COVID-19 Deaths by State')
+        st.plotly_chart(fig_pie_deaths_state, use_container_width=True)
 
     # Select topic buttons
     st.header('Select a topic')
