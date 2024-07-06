@@ -1,46 +1,49 @@
 import streamlit as st
 from io import BytesIO
+import base64
 
-# Set up the Streamlit app for the second page
-st.title("Saved Code and Graph")
+# Function to generate a downloadable code file
+def generate_code_file(code):
+    return BytesIO(code.encode())
 
-if 'code' in st.session_state and 'fig' in st.session_state:
-    # Display the saved code
-    st.write("Saved Code:")
-    st.code(st.session_state['code'], language="python")
+# Function to generate a downloadable plot file
+def generate_plot_file(fig):
+    buf = BytesIO()
+    fig.savefig(buf, format="png")
+    buf.seek(0)
+    return buf
 
-    # Display the saved graph
-    st.write("Saved Graph:")
-    st.pyplot(st.session_state['fig'])
+def saved_code_page():
+    st.title("Saved Code and Graph Page")
 
-    # Function to save code as a .py file
-    def save_code_as_file(code, filename="user_code.py"):
-        with open(filename, "w") as file:
-            file.write(code)
-        st.success(f"Code saved as {filename}")
+    if 'code_list' in st.session_state and 'fig_list' in st.session_state:
+        if st.session_state['code_list'] and st.session_state['fig_list']:
+            for i, (code, fig) in enumerate(zip(st.session_state['code_list'], st.session_state['fig_list'])):
+                st.write(f"Saved Code {i+1}:")
+                st.code(code, language="python")
+                st.pyplot(fig)
 
-    # Function to save the plot as a .png file
-    def save_plot_as_file(fig, filename="plot.png"):
-        buf = BytesIO()
-        fig.savefig(buf, format="png")
-        buf.seek(0)
-        st.download_button(
-            label="Download plot as PNG",
-            data=buf,
-            file_name=filename,
-            mime="image/png"
-        )
+                # Generate a download button for the code
+                code_download = generate_code_file(code)
+                st.download_button(
+                    label=f"Download Code {i+1} as .py",
+                    data=code_download,
+                    file_name=f"user_code_{i+1}.py",
+                    mime="text/x-python"
+                )
 
-    # Button to download the code
-    st.download_button(
-        label="Download Code as .py",
-        data=st.session_state['code'],
-        file_name="user_code.py",
-        mime="text/x-python"
-    )
+                # Generate a download button for the plot
+                plot_download = generate_plot_file(fig)
+                st.download_button(
+                    label=f"Download plot {i+1} as PNG",
+                    data=plot_download,
+                    file_name=f"plot_{i+1}.png",
+                    mime="image/png"
+                )
+        else:
+            st.info("No saved code or graph found. Please generate and save on the main page.")
+    else:
+        st.info("No saved code or graph found. Please generate and save on the main page.")
 
-    # Button to download the plot
-    save_plot_as_file(st.session_state['fig'])
-
-else:
-    st.info("No saved code or graph found. Please generate and save on the main page.")
+if __name__ == "__main__":
+    saved_code_page()

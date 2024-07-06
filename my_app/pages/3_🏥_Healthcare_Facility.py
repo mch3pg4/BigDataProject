@@ -163,53 +163,6 @@ def main():
     # add a logo to the sidebar
     st.logo('images/logo_full.png', icon_image='images/logo.png')
 
-    # # Load background image from desktop
-    # background_path = 'images/background.jpg'  # Update with your actual file path
-    # try:
-    #     with open(background_path, 'rb') as f:
-    #         background_image = f.read()
-    #         background_image_base64 = base64.b64encode(
-    #             background_image).decode()
-    #         st.markdown(
-    #             f"""
-    #             <style>
-    #             .stApp {{
-    #                 background-image: url("data:image/jpg;base64,{background_image_base64}");
-    #                 background-size: cover; /* Options: cover, contain, auto */
-    #                 background-repeat: no-repeat; /* Options: no-repeat, repeat, repeat-x, repeat-y */
-    #                 background-position: center; /* Options: left, right, top, bottom, center */
-    #                 clip-path: ellipse(75% 75% at 50% 50%); /* Example of a shape; adjust as needed */
-    #             }}
-    #             </style>
-    #             """,
-    #             unsafe_allow_html=True
-    #         )
-    # except FileNotFoundError:
-    #     st.warning('Background file not found.')
-
-    # # CSS for sidebar background
-    #sidebar_bg_path = 'images/sidebar.png'  # Update with your actual file path
-    # try:
-    #      with open(sidebar_bg_path, 'rb') as f:
-    #          sidebar_bg_image = f.read()
-    #          sidebar_bg_image_base64 = base64.b64encode(
-    #              sidebar_bg_image).decode()
-    #          st.markdown(
-    #              f"""
-    #              <style>
-    #              [data-testid="stSidebar"] {{
-    #                  background-image: url("data:image/jpg;base64,{sidebar_bg_image_base64}");
-    #                  background-size: cover; /* Options: cover, contain, auto */
-    #                  background-repeat: no-repeat; /* Options: no-repeat, repeat, repeat-x, repeat-y */
-    #                  background-position: center; /* Options: left, right, top, bottom, center */
-    #              }}
-    #              </style>
-    #              """,
-    #              unsafe_allow_html=True
-    #          )
-    # except FileNotFoundError:
-    #      st.warning('Sidebar background file not found.')
-
     st.title("🏥 Healthcare Facility Analysis in Malaysia (2020-2024)")
 
     # Load the data
@@ -253,6 +206,41 @@ def main():
     
     st.subheader("Feature Importance for ICU Data")
     bar_chart(icu_data)
+
+
+    # Load the hospitalization data
+    hospitalization_data = pd.read_csv('filtered_datasets/hospital.csv')
+
+    # Ensure the date column is in datetime format
+    hospitalization_data['date'] = pd.to_datetime(hospitalization_data['date'])
+
+    # Extract the year from the date
+    hospitalization_data['year'] = hospitalization_data['date'].dt.year
+
+    # Create a year slider
+    min_year = hospitalization_data['year'].min()
+    max_year = hospitalization_data['year'].max()
+    selected_year = st.slider('Select Year', min_year,
+                              max_year, (min_year, max_year))
+
+    # Filter the data based on the selected year
+    filtered_data = hospitalization_data[(hospitalization_data['year'] >= selected_year[0]) & (
+        hospitalization_data['year'] <= selected_year[1])]
+
+    # Line Chart: Trends over time for admitted vs. discharged patients
+    st.subheader('Admitted vs. Discharged Patients Over Time')
+    fig_line = px.line(filtered_data, x='date', y=['admitted_total', 'discharged_total'],
+                       labels={'value': 'Number of Patients', 'date': 'Date'},
+                       title='Admitted vs. Discharged Patients Over Time')
+    fig_line.update_layout(legend_title_text='Patient Status')
+
+    fig_line.for_each_trace(lambda t: t.update(name={
+        'admitted_total': 'Admitted Patients',
+        'discharged_total': 'Discharged Patients'
+    }[t.name]))
+
+    st.plotly_chart(fig_line)
+
 
 if __name__ == "__main__":
     main()
