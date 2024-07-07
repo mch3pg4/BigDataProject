@@ -42,15 +42,13 @@ def line_graph(hospital_data):
 
 
 def pie_chart_patients(hospital_data):
-    fig = px.pie(hospital_data, values='hosp_covid', names='state',
-                 title='Distribution of Hospitalized COVID-19 Patients by State Over Time')
+    fig = px.pie(hospital_data, values='hosp_covid', names='state')
     st.plotly_chart(fig)
     st.write("This pie chart shows the distribution of hospitalized COVID-19 patients by state over time in the dataset.")
 
 
 def pie_chart_beds(hospital_data):
-    fig = px.pie(hospital_data, values='beds_covid', names='state',
-                 title='Distribution of COVID-19 Beds by State Over Time')
+    fig = px.pie(hospital_data, values='beds_covid', names='state')
     st.plotly_chart(fig)
     st.write(
         "This pie chart shows the distribution of COVID-19 beds by state over time in the dataset.")
