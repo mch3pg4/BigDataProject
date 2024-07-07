@@ -25,7 +25,7 @@ def main():
     div[data-testid="stSidebarHeader"] > img, div[data-testid="collapsedControl"] > img {
         height: 5rem;
         width: auto;
-    }
+    }   
 
     div[data-testid="stSidebarHeader"], div[data-testid="stSidebarHeader"] > *,
     div[data-testid="collapsedControl"], div[data-testid="collapsedControl"] > * {
@@ -35,7 +35,7 @@ def main():
     </style>""", unsafe_allow_html=True
     )
     # add a logo to the sidebar
-    st.logo('images/logo_full.png', icon_image='images/logo.png')
+    st.logo('../images/logo_full.png', icon_image='images/logo.png')
 
     # add page navigation to the sidebar
     with st.sidebar:
