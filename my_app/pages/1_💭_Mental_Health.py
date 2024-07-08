@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import pandas as pd
 
+
 def load_code_from_file(code_filename):
     """
     Load Python code from a .py file.
@@ -15,6 +16,7 @@ def load_code_from_file(code_filename):
     with open(code_filename, 'r') as f:
         code_content = f.read()
     return code_content
+
 
 def main():
     # Scale sidebar logo to be larger
@@ -32,7 +34,7 @@ def main():
         </style>""", unsafe_allow_html=True
     )
     # Add a logo to the sidebar
-    st.sidebar.image('../images/logo_full.png', use_column_width=True)
+    st.logo('images/logo_full.png', icon_image='images/logo.png')
 
     st.title('💭 Mental Health Page')
     st.write('Welcome to the mental health page.')
@@ -69,6 +71,7 @@ def main():
                 st.image(image_path, use_column_width=True)
             else:
                 st.code(load_code_from_file(code_filename), language="python")
+
 
 if __name__ == "__main__":
     main()
