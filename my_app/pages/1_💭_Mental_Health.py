@@ -49,7 +49,7 @@ def main():
         </style>""", unsafe_allow_html=True
     )
     # Add a logo to the sidebar
-    st.logo('../images/logo_full.png', icon_image='../images/logo.png')
+    st.logo('images/logo_full.png', icon_image='images/logo.png')
 
     st.title('💭 Mental Health Page')
     st.write('Welcome to the mental health page.')
