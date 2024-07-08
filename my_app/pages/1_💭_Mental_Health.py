@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import pandas as pd
 
+
 def load_code_from_file(code_filename):
     """
     Load Python code from a .py file.
@@ -15,6 +16,22 @@ def load_code_from_file(code_filename):
     with open(code_filename, 'r') as f:
         code_content = f.read()
     return code_content
+
+
+def load_html_from_file(html_filename):
+    """
+    Load HTML content from a file.
+
+    Parameters:
+    - html_filename (str): Filename of the HTML file.
+
+    Returns:
+    - str: Contents of the HTML file as a string.
+    """
+    with open(html_filename, 'r', encoding='utf-8') as f:
+        html_content = f.read()
+    return html_content
+
 
 def main():
     # Scale sidebar logo to be larger
@@ -39,6 +56,7 @@ def main():
 
     # Directory containing images and metadata file
     image_dir = '../images/MH_graphs'
+    html_dir = '../images/MH_graphs/html'
     metadata_file = os.path.join(image_dir, 'metadata.csv')
 
     # Check if metadata file exists
@@ -57,18 +75,31 @@ def main():
 
             image_path = os.path.join(image_dir, row['filename'])
             code_filename = os.path.join(image_dir, row['code_filename'])
+            html_filename = os.path.join(html_dir, row['html_filename'])
 
-            # Button to toggle between image and code view
-            if st.button(f"View Image {i + 1}", key=f"view_image_{i}_btn"):
+            if f"view_{i}" not in st.session_state:
                 st.session_state[f"view_{i}"] = "image"
-            if st.button(f"View Code {i + 1}", key=f"view_code_{i}_btn"):
-                st.session_state[f"view_{i}"] = "code"
 
-            # Display image or code based on session state
-            if st.session_state.get(f"view_{i}") == "image":
+            # Use st.columns to place buttons side by side
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                if st.button(f"Show Image {i + 1}", key=f"show_image_{i}_btn"):
+                    st.session_state[f"view_{i}"] = "image"
+            with col2:
+                if st.button(f"Show Code {i + 1}", key=f"show_code_{i}_btn"):
+                    st.session_state[f"view_{i}"] = "code"
+            with col3:
+                if st.button(f"Show Interactive {i + 1}", key=f"show_interactive_{i}_btn"):
+                    st.session_state[f"view_{i}"] = "interactive"
+
+            if st.session_state[f"view_{i}"] == "image":
                 st.image(image_path, use_column_width=True)
-            else:
+            elif st.session_state[f"view_{i}"] == "code":
                 st.code(load_code_from_file(code_filename), language="python")
+            elif st.session_state[f"view_{i}"] == "interactive":
+                html_content = load_html_from_file(html_filename)
+                st.components.v1.html(html_content, height=500, scrolling=True)
+
 
 if __name__ == "__main__":
     main()
