@@ -314,7 +314,7 @@ def main():
         </style>""", unsafe_allow_html=True
     )
     # Add a logo to the sidebar
-    st.sidebar.image('images/logo_full.png')
+    st.logo('images/logo_full.png', icon_image='images/logo.png')
 
     # Load the data
     vaccination_data, death_data, cases_data = read_data()
