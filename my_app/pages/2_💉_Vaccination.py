@@ -284,8 +284,8 @@ def vaccination_effectiveness_scatter_plot(vaccination_data, cases_data, target=
 
     # Create a scatter plot of actual vs predicted values
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=y_test, y=y_pred, mode='markers', name='Actual vs Predicted'))
-    fig.add_trace(go.Scatter(x=[y.min(), y.max()], y=[y.min(), y.max()], mode='lines', name='Ideal', line=dict(dash='dash')))
+    fig.add_trace(go.Scatter(x=y_test, y=y_pred, mode='markers', name='Actual'))
+    fig.add_trace(go.Scatter(x=[y.min(), y.max()], y=[y.min(), y.max()], mode='lines', name='Prediction', line=dict(dash='dash')))
 
     fig.update_layout(
         title=f"Actual vs Predicted {target.replace('_', ' ').title()}",
