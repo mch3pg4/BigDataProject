@@ -110,7 +110,7 @@ def scatter_plot(hospital_data, cases_data):
 
 
 def icu_availability_chart(icu_data):
-    fig = px.line(icu_data, x='date', y=['beds_icu_covid', 'vent_covid'],
+    fig = px.line(icu_data, x='date', y=['beds_icu', 'vent'],
                   labels={'value': 'Number Available', 'date': 'Date'})
     fig.update_layout(legend_title_text='Metrics')
     st.plotly_chart(fig)
@@ -143,7 +143,7 @@ def heatmap_plot(hospital_data, icu_data):
 
     # Ensure only numeric columns are included
     numeric_columns = combined_data[[
-        'beds_icu', 'vent_covid', 'vent_used', 'icu_covid', 'icu_pui', 'icu_noncovid']].dropna()
+        'beds_icu', 'vent', 'vent_used', 'icu_covid', 'icu_pui', 'icu_noncovid']].dropna()
 
     # Compute the correlation matrix
     correlation_matrix = numeric_columns.corr()
