@@ -225,14 +225,7 @@ def main():
     # Display the map
     st.plotly_chart(fig_hosp_map)
 
-    # show pie charts side by side
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Distribution of COVID-19 Beds by State")
-        pie_chart_beds(hospital_data)
-    with col2:
-        st.subheader("Distribution of Hospitalized COVID-19 Patients by State")
-        pie_chart_patients(hospital_data)
+   
 
     st.subheader("COVID-19 Beds vs Admitted Patients")
     bubble_chart(hospital_data) 
@@ -248,9 +241,6 @@ def main():
 
     st.subheader("Monthly ICU Bed and Ventilator Usage")
     monthly_icu_usage_chart(icu_data)
-    
-    st.subheader("Feature Importance for ICU Data")
-    bar_chart(icu_data)
 
     # Load the hospitalization data
     hospitalization_data = pd.read_csv('filtered_datasets/hospital.csv')
