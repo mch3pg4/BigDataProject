@@ -1,3 +1,4 @@
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -292,10 +293,10 @@ def vaccination_effectiveness_scatter_plot(vaccination_data, cases_data, target=
 
     # Set up a parameter grid for GridSearchCV
     param_grid = {
-        'n_estimators': [100, 200],
+        'n_estimators': [100, 300],
         'max_depth': [None, 10],
-        'min_samples_split': [2, 5],
-        'min_samples_leaf': [1, 2]
+        'min_samples_split': [2, 6],
+        'min_samples_leaf': [1, 3]
     }
 
     # Perform GridSearchCV
@@ -328,6 +329,17 @@ def vaccination_effectiveness_scatter_plot(vaccination_data, cases_data, target=
     st.plotly_chart(fig)
     st.write(
         f"This scatter plot shows the relationship between actual and predicted {title} based on vaccination stages.")
+
+    # Calculate metrics
+    mae = mean_absolute_error(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+
+    # Display metrics
+    st.write(f"### Model Evaluation Metrics")
+    st.write(f"**Mean Absolute Error (MAE):** {mae:.2f}")
+    st.write(f"**Mean Squared Error (MSE):** {mse:.2f}")
+    st.write(f"**R-squared (R²):** {r2:.2f}")
 
 
 def main():
@@ -364,7 +376,7 @@ def main():
     vaccination_data, death_data, cases_data = preprocess_data(
         vaccination_data, death_data, cases_data, start_year, end_year, states)
 
-    st.title('💉Vaccination Page (2020-2024)')
+    st.title('💉Vaccination Page')
     st.header("Graphs")
     st.write("The graphs shown below is relevant to the relationship between vaccination, Covid-19 cases and death cases during pandemic Covid-19 in Malaysia from January of 2020 until June of 2024.")
 
@@ -394,10 +406,10 @@ def main():
     st.plotly_chart(stacked_area_chart)
     st.write("The stacked area chart provides a clear view of the cumulative impact of the pandemic in terms of cases and deaths, helping to understand the overall trend and peaks over time.")
 
-    # Assuming other sections of your main() function remain unchanged
-    st.subheader("Cases Prediction")
-    st.write("Select the target variable to make the prediction")
-    target_variable = st.selectbox("Select Target Variable", ['cases_pvax', 'cases_fvax', 'cases_boost'])
+    st.subheader("Vaccination Effectiveness Prediction")
+    st.write("Select the target variable to predict effectiveness:")
+    target_variable = st.selectbox("Select Target Variable", [
+                                   'cases_pvax', 'cases_fvax', 'cases_boost'])
 
     vaccination_effectiveness_scatter_plot(
         vaccination_data, cases_data, target=target_variable)
