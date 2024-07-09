@@ -55,14 +55,18 @@ def main():
     st.write('Welcome to the mental health page.')
 
     # Directory containing images and metadata file
-    image_dir = '../images/MH_graphs'
-    html_dir = '../images/MH_graphs/html'
-    metadata_file = os.path.join(image_dir, 'metadata.csv')
+    image_dir = 'images/MH_graphs'
+    html_dir = 'images/MH_graphs/html'
+    metadata_file = 'images/metadata.csv'
 
-    # Check if metadata file exists
+     # Print the full path to check correctness
+    print(f"Full path to metadata file: {os.path.abspath(metadata_file)}")
+
+    # Check if file exists
     if not os.path.exists(metadata_file):
-        st.error("Metadata file not found!")
-        return
+        print("Metadata file does not exist!")
+    else:
+        print("Metadata file found.")
 
     # Load metadata
     metadata = pd.read_csv(metadata_file)

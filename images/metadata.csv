@@ -1,0 +1,8 @@
+filename,html_filename,title,subheading,description,code_filename
+plot_1.png,plot_1.html,Anxiety Based on Low CI & High CI,Histogram Graph,Code for Graph 1,code1.py
+plot_2.png,plot_2.html,Depression Based on Low CI & High CI,Histogram Graph,Code for Graph 2,code2.py
+plot_3.png,plot_3.html,Covid 19 Depressive Disorder,Line Graph - Trends Over Time,Code for Graph 3,code3.py
+plot_4.png,plot_4.html,Covid 19 Anxiety Disorder,Line Graph - Trends Over Time,Code for Graph 4,code4.py
+plot_5.png,plot_5.html,Maternal Age vs EPDS,Scatter Plot,Code for Graph 5,code5.py
+plot_6.png,plot_6.html,NICU Stay Across Delivery Modes,Histogram,Code for Graph 6,code6.py
+plot_7.png,plot_7.html,Distribution of Maternal Age Across Different Household Income Levels,Box Plot,Code for Graph 7,code7.py
