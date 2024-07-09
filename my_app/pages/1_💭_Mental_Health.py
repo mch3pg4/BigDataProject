@@ -16,12 +16,14 @@ def load_html_from_file(html_filename):
 
 
 def main():
+    # Scale sidebar logo to be larger
     st.markdown(
         """<style>
         div[data-testid="stSidebarHeader"] > img, div[data-testid="collapsedControl"] > img {
             height: 5rem;
             width: auto;
         }
+
         div[data-testid="stSidebarHeader"], div[data-testid="collapsedControl"] > img {
             display: flex;
             align-items: center;
