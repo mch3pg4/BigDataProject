@@ -233,15 +233,15 @@ def main():
     st.subheader("Regression Analysis: New Cases vs. Hospital Admissions")
     scatter_plot(hospital_data, cases_data)
     
-    st.subheader("Heatmap of Hospital and ICU Data")
-    heatmap_plot(hospital_data, icu_data)
-
     st.subheader("ICU Bed and Ventilator Availability Over Time")
     icu_availability_chart(icu_data)
 
     st.subheader("Monthly ICU Bed and Ventilator Usage")
     monthly_icu_usage_chart(icu_data)
 
+    st.subheader("Heatmap of Hospital and ICU Data")
+    heatmap_plot(hospital_data, icu_data)
+    
     # Load the hospitalization data
     hospitalization_data = pd.read_csv('filtered_datasets/hospital.csv')
 
