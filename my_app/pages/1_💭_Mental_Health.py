@@ -51,8 +51,8 @@ def main():
        """)
 
     # Directory containing images and metadata file
-    image_dir = '../images/MH_graphs'
-    html_dir = '../images/MH_graphs/html'
+    image_dir = 'images/MH_graphs'
+    html_dir = 'images/MH_graphs/html'
     metadata_file = os.path.join(image_dir, 'metadata.csv')
 
     if not os.path.exists(metadata_file):
@@ -61,10 +61,12 @@ def main():
 
     metadata = pd.read_csv(metadata_file)
 
-    anxiety_depression = metadata[metadata['category'] == 'Anxiety and Depression']
+    anxiety_depression = metadata[metadata['category']
+                                  == 'Anxiety and Depression']
     pregnancy = metadata[metadata['category'] == 'Pregnancy']
 
-    tabs = st.tabs(["Anxiety and Depression", "Mental Health During Pregnancy"])
+    tabs = st.tabs(["Anxiety and Depression",
+                   "Mental Health During Pregnancy"])
 
     with tabs[0]:
         st.header("Anxiety and Depression Graphs")

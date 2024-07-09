@@ -1,4 +1,3 @@
-import joblib
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 import streamlit as st
@@ -10,7 +9,6 @@ import json
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
-from sklearn.ensemble import RandomForestRegressor
 
 
 def load_data():
@@ -107,6 +105,12 @@ def scatter_plot(hospital_data, cases_data):
     # Display the plot in Streamlit
     st.plotly_chart(fig)
     st.write("This scatter plot shows the relationship between the number of new COVID-19 cases and the number of hospital admissions.")
+
+    # DIsplay evaluation metrics
+    st.write('Mean Absolute Error:', np.mean(np.abs(y_pred - y_test)))
+    st.write('Mean Squared Error:', np.mean((y_pred - y_test)**2))
+    st.write('Root Mean Squared Error:', np.sqrt(
+        np.mean((y_pred - y_test)**2)))
 
 
 def icu_availability_chart(icu_data):
