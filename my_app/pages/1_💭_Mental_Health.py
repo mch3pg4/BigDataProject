@@ -52,8 +52,9 @@ def main():
     st.logo('images/logo_full.png', icon_image='images/logo.png')
 
     st.title('💭 Mental Health Page')
+    st.header("Graphs")
     st.write('Welcome to the mental health page.')
-
+    
     # Directory containing images and metadata file
     image_dir = 'images/MH_graphs'
     html_dir = 'images/MH_graphs/html'

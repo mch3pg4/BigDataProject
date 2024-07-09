@@ -151,7 +151,7 @@ def main():
     # add a logo to the sidebar
     st.logo('images/logo_full.png', icon_image='images/logo.png')
 
-    st.title("🏥 Healthcare Facility Analysis in Malaysia")
+    st.title("🏥 Healthcare Facility Page")
 
     # Load the data
     hospital_data, icu_data, cases_data = load_data()

@@ -329,7 +329,7 @@ def main():
     # Preprocess the data
     vaccination_data, death_data, cases_data = preprocess_data(vaccination_data, death_data, cases_data, start_year, end_year, states)
 
-    st.title('💉Vaccination Page (2020-2024)')
+    st.title('💉Vaccination Page')
     st.header("Graphs")
     st.write("The graphs shown below is relevant to the relationship between vaccination, Covid-19 cases and death cases during pandemic Covid-19 in Malaysia from January of 2020 until June of 2024.")
 
