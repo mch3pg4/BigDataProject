@@ -370,8 +370,8 @@ def main():
     st.write("Explanation: The stacked area chart provides a clear view of the cumulative impact of the pandemic in terms of cases and deaths, helping to understand the overall trend and peaks over time.")
 
     # Assuming other sections of your main() function remain unchanged
-    st.subheader("Vaccination Effectiveness Prediction")
-    st.write("Select the target variable to predict effectiveness:")
+    st.subheader("Cases Prediction")
+    st.write("Select the target variable to make the prediction")
     target_variable = st.selectbox("Select Target Variable", ['cases_pvax', 'cases_fvax', 'cases_boost'])
 
     vaccination_effectiveness_scatter_plot(vaccination_data, cases_data, target=target_variable)
