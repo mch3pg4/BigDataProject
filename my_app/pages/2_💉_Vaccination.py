@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 def read_data():
     # Load the data
@@ -269,10 +270,10 @@ def vaccination_effectiveness_scatter_plot(vaccination_data, cases_data, target=
 
     # Set up a parameter grid for GridSearchCV
     param_grid = {
-        'n_estimators': [100, 200],
+        'n_estimators': [100, 300],
         'max_depth': [None, 10],
-        'min_samples_split': [2, 5],
-        'min_samples_leaf': [1, 2]
+        'min_samples_split': [2, 6],
+        'min_samples_leaf': [1, 3]
     }
 
     # Perform GridSearchCV
@@ -295,6 +296,17 @@ def vaccination_effectiveness_scatter_plot(vaccination_data, cases_data, target=
 
     st.plotly_chart(fig)
     st.write(f"This scatter plot shows the relationship between actual and predicted {target.replace('_', ' ').title()} based on vaccination stages.")
+
+    # Calculate metrics
+    mae = mean_absolute_error(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+
+    # Display metrics
+    st.write(f"### Model Evaluation Metrics")
+    st.write(f"**Mean Absolute Error (MAE):** {mae:.2f}")
+    st.write(f"**Mean Squared Error (MSE):** {mse:.2f}")
+    st.write(f"**R-squared (R²):** {r2:.2f}")
 
 
 def main():
