@@ -114,7 +114,7 @@ def scatter_plot(hospital_data, cases_data):
 
 
 def icu_availability_chart(icu_data):
-    fig = px.line(icu_data, x='date', y=['beds_icu_covid', 'vent'],
+    fig = px.line(icu_data, x='date', y=['beds_icu', 'vent'],
                   labels={'value': 'Number Available', 'date': 'Date'})
     fig.update_layout(legend_title_text='Metrics')
     st.plotly_chart(fig)
