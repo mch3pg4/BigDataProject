@@ -77,7 +77,7 @@ def main():
     total_deaths = death_data[[
         'deaths_unvax', 'deaths_pvax', 'deaths_fvax']].sum().sum()
     total_recoveries = hospital_data['discharged_total'].sum()
-    total_vaccinations = vax_data['cumul_full'].max()
+    total_vaccinations = vax_data['daily_full'].sum()
 
     # Display the metrics in a row
     col1, col2, col3, col4 = st.columns(4)

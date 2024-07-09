@@ -209,7 +209,7 @@ def main():
     hospital_data, icu_data, cases_data = load_data()
 
     # Sidebar for user control
-    st.sidebar.title("Controls")
+    st.sidebar.title("Filters")
     start_year = st.sidebar.slider(
         "Select Start Year", min_value=2020, max_value=2024, value=2020)
     end_year = st.sidebar.slider(

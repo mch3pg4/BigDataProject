@@ -55,8 +55,8 @@ def main():
     st.write('Welcome to the mental health page.')
 
     # Directory containing images and metadata file
-    image_dir = '../images/MH_graphs'
-    html_dir = '../images/MH_graphs/html'
+    image_dir = 'images/MH_graphs'
+    html_dir = 'images/MH_graphs/html'
     metadata_file = os.path.join(image_dir, 'metadata.csv')
 
     # Check if metadata file exists
