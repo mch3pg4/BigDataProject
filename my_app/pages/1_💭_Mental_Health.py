@@ -51,9 +51,9 @@ def main():
        """)
 
     # Directory containing images and metadata file
-    image_dir = '../images/MH_graphs'
-    html_dir = '../images/MH_graphs/html'
-    metadata_file = os.path.join(image_dir, 'metadata.csv')
+    image_dir = 'images/MH_graphs'
+    html_dir = 'images/MH_graphs/html'
+    metadata_file = 'images/MH_graphs/metadata.csv'
 
     if not os.path.exists(metadata_file):
         st.error("Metadata file not found!")
