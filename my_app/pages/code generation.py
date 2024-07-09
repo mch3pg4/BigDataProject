@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import plotly.express as px
 from io import BytesIO
 
 
@@ -13,7 +12,7 @@ def generate_code_file(code):
 # Function to generate a downloadable plot file
 def generate_plot_file(fig):
     buf = BytesIO()
-    fig.savefig(buf, format="png", bbox_inches='tight')
+    fig.write_image(buf, format="png")
     buf.seek(0)
     return buf
 
@@ -35,12 +34,8 @@ def main():
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 
     if uploaded_file is not None:
-        # Store the uploaded file in session state
-        st.session_state.uploaded_file = uploaded_file
-        st.session_state.merged_df = pd.read_csv(uploaded_file)
-
-    if st.session_state.uploaded_file is not None:
-        merged_df = st.session_state.merged_df
+        # Load the data
+        merged_df = pd.read_csv(uploaded_file)
 
         # Display the data
         st.write("Data from the uploaded CSV file:")
@@ -74,8 +69,6 @@ def main():
         # Dropdown to select x and y axes
         x_axis = st.selectbox("Select X-axis", merged_df.columns, key="x_axis")
         y_axis = st.selectbox("Select Y-axis", merged_df.columns, key="y_axis")
-
-        #Dropdown to select indicator
         indicator = st.selectbox("Select Indicator", merged_df.columns, key="indicator")
 
         # Dropdown to select graph type
@@ -91,26 +84,22 @@ def main():
         # Prepare a placeholder for the graph
         placeholder = st.empty()
 
-        # Function to generate a graph
+        # Function to generate an interactive graph
         def generate_graph(x, y, indicator, title):
-            fig, ax = plt.subplots(figsize=(12, 6))  # Increase figure size for better visualization
             if graph_type == "Scatter Plot":
-                sns.scatterplot(x=x, y=y, hue=indicator, data=merged_df, ax=ax)
+                fig = px.scatter(merged_df, x=x, y=y, color=indicator, title=title)
             elif graph_type == "Bar Chart":
-                sns.barplot(x=x, y=y, hue=indicator, data=merged_df, ax=ax)
+                fig = px.bar(merged_df, x=x, y=y, color=indicator, title=title)
             elif graph_type == "Histogram":
-                sns.histplot(x=y, hue=indicator, data=merged_df, ax=ax)
+                fig = px.histogram(merged_df, x=x, color=indicator, title=title)
             elif graph_type == "Pie Chart":
-                data = merged_df.groupby(x)[y].sum()
-                ax.pie(data, labels=data.index, autopct='%1.1f%%', startangle=90, counterclock=False)
-                ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+                data = merged_df.groupby(x)[y].sum().reset_index()
+                fig = px.pie(data, values=y, names=x, title=title)
             elif graph_type == "Box Plot":
-                sns.boxplot(x=x, y=y, data=merged_df, ax=ax)
-                ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')  # Rotate x labels for better readability
+                fig = px.box(merged_df, x=x, y=y, color=indicator, title=title)
             elif graph_type == "Line Graph":
-                sns.lineplot(x=x, y=y, hue=indicator, data=merged_df, ax=ax, linewidth=2.5)  # Thicker line
-            ax.set_title(title)
-            placeholder.pyplot(fig)
+                fig = px.line(merged_df, x=x, y=y, color=indicator, title=title)
+            placeholder.plotly_chart(fig)
             return fig
 
         # Run the user code when the button is clicked
@@ -119,8 +108,7 @@ def main():
             if fig:
                 code = f"""
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+import plotly.express as px
 
 # Load the data
 merged_df = pd.read_csv('path/to/your/csv/file.csv')
@@ -133,28 +121,25 @@ for column, filter_value in filters.items():
         merged_df = merged_df[merged_df[column].isin(filter_value)]
 
 # Generate the graph
-fig, ax = plt.subplots(figsize=(12, 6))
 if '{graph_type}' == "Scatter Plot":
-    sns.scatterplot(x='{x_axis}', y='{y_axis}', hue='indicator', data=merged_df, ax=ax)
+    fig = px.scatter(merged_df, x='{x_axis}', y='{y_axis}', color='{indicator}', title='{graph_title}')
 elif '{graph_type}' == "Bar Chart":
-    sns.barplot(x='{x_axis}', y='{y_axis}', hue='indicator', data=merged_df, ax=ax)
+    fig = px.bar(merged_df, x='{x_axis}', y='{y_axis}', color='{indicator}', title='{graph_title}')
 elif '{graph_type}' == "Histogram":
-    sns.histplot(x='{y_axis}', hue='indicator', data=merged_df, ax=ax)
+    fig = px.histogram(merged_df, x='{x_axis}', color='{indicator}', title='{graph_title}')
 elif '{graph_type}' == "Pie Chart":
-    data = merged_df.groupby('{x_axis}')['{y_axis}'].sum()
-    ax.pie(data, labels=data.index, autopct='%1.1f%%', startangle=90, counterclock=False)
-    ax.axis('equal')
+    data = merged_df.groupby('{x_axis}')['{y_axis}'].sum().reset_index()
+    fig = px.pie(data, values='{y_axis}', names='{x_axis}', title='{graph_title}')
 elif '{graph_type}' == "Box Plot":
-    sns.boxplot(x='{x_axis}', y='{y_axis}', data=merged_df, ax=ax)
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+    fig = px.box(merged_df, x='{x_axis}', y='{y_axis}', color='{indicator}', title='{graph_title}')
 elif '{graph_type}' == "Line Graph":
-    sns.lineplot(x='{x_axis}', y='{y_axis}', hue='indicator', data=merged_df, ax=ax, linewidth=2.5)
-ax.set_title('{graph_title}')
-plt.show()
+    fig = px.line(merged_df, x='{x_axis}', y='{y_axis}', color='{indicator}', title='{graph_title}')
+fig.show()
 """
                 st.session_state['code_list'].append(code)
                 st.session_state['fig_list'].append(fig)
                 st.success("Code generated successfully!")
+
     else:
         st.info("Please upload a CSV file to proceed.")
 
