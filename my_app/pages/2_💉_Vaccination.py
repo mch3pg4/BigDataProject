@@ -406,13 +406,27 @@ def main():
     st.plotly_chart(stacked_area_chart)
     st.write("The stacked area chart provides a clear view of the cumulative impact of the pandemic in terms of cases and deaths, helping to understand the overall trend and peaks over time.")
 
-    st.subheader("Vaccination Effectiveness Prediction")
-    st.write("Select the target variable to predict effectiveness:")
-    target_variable = st.selectbox("Select Target Variable", [
-                                   'cases_pvax', 'cases_fvax', 'cases_boost'])
+    # Assuming other sections of your main() function remain unchanged
+    st.subheader("Cases Prediction")
+    st.write("Select the target variable to make the prediction")
 
-    vaccination_effectiveness_scatter_plot(
-        vaccination_data, cases_data, target=target_variable)
+    # Define a mapping for the select box options
+    target_variable_mapping = {
+        'cases_pvax': 'Cases with Partial Vaccination',
+        'cases_fvax': 'Cases with Full Vaccination',
+        'cases_boost': 'Cases with Booster Vaccination'
+    }
+
+    # Reverse the mapping for easier retrieval of the internal value
+    reverse_target_variable_mapping = {v: k for k, v in target_variable_mapping.items()}
+
+    # Use the display names in the select box
+    selected_display_name = st.selectbox("Select Target Variable", list(target_variable_mapping.values()))
+
+    # Retrieve the internal value based on the selected display name
+    target_variable = reverse_target_variable_mapping[selected_display_name]
+
+    vaccination_effectiveness_scatter_plot(vaccination_data, cases_data, target=target_variable)
 
 
 if __name__ == "__main__":
