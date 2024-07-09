@@ -4,30 +4,12 @@ import pandas as pd
 
 
 def load_code_from_file(code_filename):
-    """
-    Load Python code from a .py file.
-
-    Parameters:
-    - code_filename (str): Filename of the Python code file.
-
-    Returns:
-    - str: Contents of the Python code file as a string.
-    """
     with open(code_filename, 'r') as f:
         code_content = f.read()
     return code_content
 
 
 def load_html_from_file(html_filename):
-    """
-    Load HTML content from a file.
-
-    Parameters:
-    - html_filename (str): Filename of the HTML file.
-
-    Returns:
-    - str: Contents of the HTML file as a string.
-    """
     with open(html_filename, 'r', encoding='utf-8') as f:
         html_content = f.read()
     return html_content
@@ -48,35 +30,66 @@ def main():
         }
         </style>""", unsafe_allow_html=True
     )
+
     # Add a logo to the sidebar
     st.logo('images/logo_full.png', icon_image='images/logo.png')
 
     st.title('💭 Mental Health Page')
-    st.header("Graphs")
-    st.write('Welcome to the mental health page.')
-    
+    # Introductory section
+    st.write("""
+           ## Welcome to the Mental Health Page
+           This page is dedicated to providing insights into various aspects of mental health through interactive and static graphs. 
+           Mental health is a critical part of overall well-being, and understanding the trends, challenges, and data behind it 
+           can help in forming better support systems and interventions.
+
+           ### Types of Graphs:
+           - **Anxiety and Depression Graphs**: These graphs showcase trends, statistics, and insights related to anxiety and depression.
+           - **Mental Health During Pregnancy**: These graphs focus on the psychological well-being of expectant mothers, presenting relevant data and analysis.
+       
+       
+       
+       """)
+
     # Directory containing images and metadata file
     image_dir = 'images/MH_graphs'
     html_dir = 'images/MH_graphs/html'
-    metadata_file = 'images/metadata.csv'
+    metadata_file = 'images/MH_graphs/metadata.csv'
 
-     # Print the full path to check correctness
-    print(f"Full path to metadata file: {os.path.abspath(metadata_file)}")
-
-    # Check if file exists
     if not os.path.exists(metadata_file):
-        print("Metadata file does not exist!")
-    else:
-        print("Metadata file found.")
+        st.error("Metadata file not found!")
+        return
 
-    # Load metadata
     metadata = pd.read_csv(metadata_file)
 
-    # Display each image with title, subheading, and toggle buttons
+    anxiety_depression = metadata[metadata['category']
+                                  == 'Anxiety and Depression']
+    pregnancy = metadata[metadata['category'] == 'Pregnancy']
+
+    tabs = st.tabs(["Anxiety and Depression",
+                   "Mental Health During Pregnancy"])
+
+    with tabs[0]:
+        st.header("Anxiety and Depression Graphs")
+        st.write(
+            "These graphs showcase trends, statistics, and insights related to anxiety and depression across the "
+            "United States, highlighting the variability and distribution of symptoms over time.")
+        display_graphs(anxiety_depression, image_dir, html_dir)
+
+    with tabs[1]:
+        st.header("Mental Health During Pregnancy Graphs")
+        st.write(
+            "These graphs focus on the psychological well-being of expectant mothers across Canada, presenting "
+            "relevant data and analysis on maternal age versus EPDS scores, NICU stay across delivery modes, "
+            "and maternal age across different household income levels.")
+        display_graphs(pregnancy, image_dir, html_dir)
+
+
+def display_graphs(metadata, image_dir, html_dir):
     for i, row in metadata.iterrows():
         with st.container():
             st.subheader(row['title'])
             st.write(row['subheading'])
+            st.write(row['description'])
 
             image_path = os.path.join(image_dir, row['filename'])
             code_filename = os.path.join(image_dir, row['code_filename'])
@@ -85,8 +98,15 @@ def main():
             if f"view_{i}" not in st.session_state:
                 st.session_state[f"view_{i}"] = "image"
 
-            # Use st.columns to place buttons side by side
-            col1, col2, col3 = st.columns(3)
+            st.markdown(
+                """<style>
+                .stButton > button {
+                    margin-right: 5px;
+                }
+                </style>""", unsafe_allow_html=True
+            )
+
+            col1, col2, col3 = st.columns([1, 1, 1])
             with col1:
                 if st.button(f"Show Image {i + 1}", key=f"show_image_{i}_btn"):
                     st.session_state[f"view_{i}"] = "image"

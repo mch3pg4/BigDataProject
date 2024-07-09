@@ -1,8 +1,8 @@
-filename,html_filename,title,subheading,description,code_filename
-plot_1.png,plot_1.html,Anxiety Based on Low CI & High CI,Histogram Graph,Code for Graph 1,code1.py
-plot_2.png,plot_2.html,Depression Based on Low CI & High CI,Histogram Graph,Code for Graph 2,code2.py
-plot_3.png,plot_3.html,Covid 19 Depressive Disorder,Line Graph - Trends Over Time,Code for Graph 3,code3.py
-plot_4.png,plot_4.html,Covid 19 Anxiety Disorder,Line Graph - Trends Over Time,Code for Graph 4,code4.py
-plot_5.png,plot_5.html,Maternal Age vs EPDS,Scatter Plot,Code for Graph 5,code5.py
-plot_6.png,plot_6.html,NICU Stay Across Delivery Modes,Histogram,Code for Graph 6,code6.py
-plot_7.png,plot_7.html,Distribution of Maternal Age Across Different Household Income Levels,Box Plot,Code for Graph 7,code7.py
+category,filename,html_filename,title,subheading,description,code_filename
+Anxiety and Depression,plot_1.png,plot_1.html,Anxiety Based on Low CI & High CI,📊Histogram Graph,"This graph contrasts anxiety levels based on their lower and upper confidence intervals, offering insights into the range of reported anxiety during the pandemic. It helps gauge the uncertainty and severity of anxiety symptoms over time.",code1.py
+Anxiety and Depression,plot_2.png,plot_2.html,Depression Based on Low CI & High CI,📊Histogram Graph,"This graph compares depression levels using lower and upper confidence intervals, providing a spectrum of depressive symptoms experienced. It helps visualize the variability and intensity of depression trends, aiding in targeted mental health support strategies.",code2.py
+Anxiety and Depression,plot_3.png,plot_3.html,Depressive Disorder Trends Over Time,📈Line Graph - Trends Over Time,"This chart illustrates how anxiety levels have fluctuated over time, highlighting periods of heightened concern. It helps pinpoint when and where mental health interventions may be most beneficial.",code3.py
+Anxiety and Depression,plot_4.png,plot_4.html,Anxiety Disorder Trends Over Time,📈Line Graph - Trends Over Time,"This chart tracks changes in depressive symptoms over time, revealing patterns that inform targeted support efforts. It's essential for understanding and addressing fluctuations in mental health across different periods.",code4.py
+Pregnancy,plot_5.png,plot_5.html,Maternal Age vs Edinburgh Postnatal Depression Scale,📊Scatter Plot,"This scatter plot examines the correlation between maternal age and edinburgh postnatal depression scale (EPDS) scores, shedding light on how age influences postnatal depression risk. It helps identify potential age-related patterns in mental health during pregnancy.",code5.py
+Pregnancy,plot_6.png,plot_6.html,NICU Stay Across Delivery Modes,📊Histogram,"This histogram displays the distribution of NICU (Neonatal Intensive Care Unit) stays across various delivery modes. It provides insights into the frequency and duration of NICU stays, crucial for understanding birth-related healthcare needs".,code6.py
+Pregnancy,plot_7.png,plot_7.html,Distribution of Maternal Age Across Different Household Income Levels,📊Box Plot,"This box plot visualizes the spread of maternal age across different household income brackets. It highlights how income influences maternal age distribution, offering sociodemographic insights into pregnancy-related health trends.",code7.py

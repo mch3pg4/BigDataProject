@@ -1,4 +1,3 @@
-import joblib
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 import streamlit as st
@@ -10,7 +9,6 @@ import json
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
-from sklearn.ensemble import RandomForestRegressor
 
 
 def load_data():
@@ -26,6 +24,7 @@ def load_data():
 
     return hospital_data, icu_data, cases_data
 
+
 def preprocess_data(hospital_data, icu_data, cases_data, start_year=2020, end_year=2024):
     # Filter the data for the selected year range
     hospital_data = hospital_data[(hospital_data['date'].dt.year >= start_year) & (
@@ -37,10 +36,25 @@ def preprocess_data(hospital_data, icu_data, cases_data, start_year=2020, end_ye
 
     return hospital_data, icu_data, cases_data
 
+
 def line_graph(hospital_data):
     fig = px.line(hospital_data, x='date', y='beds_covid')
     st.plotly_chart(fig)
     st.write("This line graph shows the number of COVID-19 beds over time.")
+
+
+def pie_chart_patients(hospital_data):
+    fig = px.pie(hospital_data, values='hosp_covid', names='state')
+    st.plotly_chart(fig)
+    st.write("This pie chart shows the distribution of hospitalized COVID-19 patients by state over time in the dataset.")
+
+
+def pie_chart_beds(hospital_data):
+    fig = px.pie(hospital_data, values='beds_covid', names='state')
+    st.plotly_chart(fig)
+    st.write(
+        "This pie chart shows the distribution of COVID-19 beds by state over time in the dataset.")
+
 
 def bubble_chart(hospital_data):
     fig = px.scatter(hospital_data, x='beds_covid', y='admitted_covid', size='hosp_covid',
@@ -48,46 +62,6 @@ def bubble_chart(hospital_data):
     st.plotly_chart(fig)
     st.write("This bubble chart shows the comparison between COVID-19 beds with admitted patients, colored by state and sized by hospitalized COVID-19 patients.")
 
-def icu_availability_chart(icu_data):
-    fig = px.line(icu_data, x='date', y=['beds_icu', 'vent_covid'],
-                  labels={'value': 'Number Available', 'date': 'Date'})
-    fig.update_layout(legend_title_text='Metrics')
-    st.plotly_chart(fig)
-    st.write("This line chart shows the availability of ICU beds and ventilators over time.")
-
-def monthly_icu_usage_chart(icu_data):
-    # Convert the 'date' column to string format for compatibility with Plotly
-    icu_data['month'] = icu_data['date'].dt.to_period('M').astype(str)
-    
-    # Aggregate data by month
-    monthly_usage = icu_data.groupby('month').agg({
-        'beds_icu': 'sum',
-        'vent_covid': 'sum',
-        'icu_covid': 'sum'
-    }).reset_index()
-    
-    fig = px.bar(monthly_usage, x='month', y=['beds_icu', 'vent_covid'],
-                 labels={'value': 'Number Used', 'month': 'Month'})
-    fig.update_layout(barmode='stack')
-    
-    st.plotly_chart(fig)
-    st.write("This bar chart shows the total monthly usage of ICU beds and ventilators.")
-
-def heatmap_plot(hospital_data, icu_data):
-    # Merge the hospital and ICU data on 'date' and 'state'
-    combined_data = pd.merge(hospital_data, icu_data, on=['date', 'state'])
-    
-    # Ensure only numeric columns are included
-    numeric_columns = combined_data[['beds_icu', 'vent', 'vent_used', 'icu_covid', 'icu_pui', 'icu_noncovid']].dropna()
-    
-    # Compute the correlation matrix
-    correlation_matrix = numeric_columns.corr()
-    
-    # Create the heatmap
-    fig = px.imshow(correlation_matrix, text_auto=True, aspect="auto",
-                    color_continuous_scale='RdBu_r')
-    st.plotly_chart(fig)
-    st.write("This heatmap shows the correlation between ICU metrics (beds, ventilators, usage) and patient categories (COVID, PUI, non-COVID).")
 
 def scatter_plot(hospital_data, cases_data):
     hospital_cases_data = pd.merge(
@@ -132,6 +106,59 @@ def scatter_plot(hospital_data, cases_data):
     st.plotly_chart(fig)
     st.write("This scatter plot shows the relationship between the number of new COVID-19 cases and the number of hospital admissions.")
 
+    # DIsplay evaluation metrics
+    st.write('Mean Absolute Error:', np.mean(np.abs(y_pred - y_test)))
+    st.write('Mean Squared Error:', np.mean((y_pred - y_test)**2))
+    st.write('Root Mean Squared Error:', np.sqrt(
+        np.mean((y_pred - y_test)**2)))
+
+
+def icu_availability_chart(icu_data):
+    fig = px.line(icu_data, x='date', y=['beds_icu', 'vent'],
+                  labels={'value': 'Number Available', 'date': 'Date'})
+    fig.update_layout(legend_title_text='Metrics')
+    st.plotly_chart(fig)
+    st.write(
+        "This line chart shows the availability of ICU beds and ventilators over time.")
+
+
+def monthly_icu_usage_chart(icu_data):
+    # Convert the 'date' column to string format for compatibility with Plotly
+    icu_data['month'] = icu_data['date'].dt.to_period('M').astype(str)
+
+    # Aggregate data by month
+    monthly_usage = icu_data.groupby('month').agg({
+        'vent_covid': 'sum',
+        'icu_covid': 'sum'
+    }).reset_index()
+
+    fig = px.bar(monthly_usage, x='month', y=['icu_covid', 'vent_covid'],
+                 labels={'value': 'Number Used', 'month': 'Month'})
+    fig.update_layout(barmode='stack')
+
+    st.plotly_chart(fig)
+    st.write(
+        "This bar chart shows the total monthly usage of ICU beds and ventilators.")
+
+
+def heatmap_plot(hospital_data, icu_data):
+    # Merge the hospital and ICU data on 'date' and 'state'
+    combined_data = pd.merge(hospital_data, icu_data, on=['date', 'state'])
+
+    # Ensure only numeric columns are included
+    numeric_columns = combined_data[[
+        'beds_icu', 'vent', 'vent_used', 'icu_covid', 'icu_pui', 'icu_noncovid']].dropna()
+
+    # Compute the correlation matrix
+    correlation_matrix = numeric_columns.corr()
+
+    # Create the heatmap
+    fig = px.imshow(correlation_matrix, text_auto=True, aspect="auto",
+                    color_continuous_scale='RdBu_r')
+    st.plotly_chart(fig)
+    st.write("This heatmap shows the correlation between ICU metrics (beds, ventilators, usage) and patient categories (COVID, PUI, non-COVID).")
+
+
 def main():
     # scale sidebar logo to be larger
     st.markdown(
@@ -151,13 +178,13 @@ def main():
     # add a logo to the sidebar
     st.logo('images/logo_full.png', icon_image='images/logo.png')
 
-    st.title("🏥 Healthcare Facility Page")
+    st.title("🏥 Healthcare Facility Analysis in Malaysia")
 
     # Load the data
     hospital_data, icu_data, cases_data = load_data()
 
     # Sidebar for user control
-    st.sidebar.title("Controls")
+    st.sidebar.title("Filters")
     start_year = st.sidebar.slider(
         "Select Start Year", min_value=2020, max_value=2024, value=2020)
     end_year = st.sidebar.slider(
@@ -225,29 +252,31 @@ def main():
     # Display the map
     st.plotly_chart(fig_hosp_map)
 
-   
+    # show pie charts side by side
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Distribution of COVID-19 Beds by State")
+        pie_chart_beds(hospital_data)
+    with col2:
+        st.subheader("Distribution of Hospitalized COVID-19 Patients by State")
+        pie_chart_patients(hospital_data)
 
     st.subheader("COVID-19 Beds vs Admitted Patients")
-    bubble_chart(hospital_data) 
-    
+    bubble_chart(hospital_data)
+
     st.subheader("Regression Analysis: New Cases vs. Hospital Admissions")
     scatter_plot(hospital_data, cases_data)
-    
+
+    st.subheader("Heatmap of ICU and Ventilator Metrics Correlation")
+    heatmap_plot(hospital_data, icu_data)
+
     st.subheader("ICU Bed and Ventilator Availability Over Time")
     icu_availability_chart(icu_data)
 
-    st.subheader("Monthly ICU Bed and Ventilator Usage")
+    st.subheader("Monthly ICU Bed and Ventilator Usage for COVID-19 Patients")
     monthly_icu_usage_chart(icu_data)
 
-    st.subheader("Heatmap of Hospital and ICU Data")
-    heatmap_plot(hospital_data, icu_data)
-    
-    # Load the hospitalization data
-    hospitalization_data = pd.read_csv('filtered_datasets/hospital.csv')
-
-    # Ensure the date column is in datetime format
-    hospitalization_data['date'] = pd.to_datetime(hospitalization_data['date'])
-
+    # Show admitted vs discharged patients over time
     # Extract the year from the date
     hospital_data['year'] = hospital_data['date'].dt.year
 
@@ -292,47 +321,53 @@ def main():
     state_to_plot = st.selectbox("Select State to Plot", states)
     state_data = data[data['state'] == state_to_plot]
 
-    if st.button('Predict'):
-        # Select the target variable
-        target = 'admitted_covid'
-        y = state_data.set_index('date')[target]
+    # Select the target variable
+    target = 'admitted_covid'
+    y = state_data.set_index('date')[target]
 
-        # Split the data into training and testing sets
-        train_end = '2022-06-30'
-        test_start = '2022-07-01'
-        test_end = '2022-07-31'
-        y_train = y[:train_end]
-        y_test = y[test_start:test_end]
+    # Split the data into training and testing sets
+    train_end = '2022-06-30'
+    test_start = '2022-07-01'
+    test_end = '2022-07-31'
+    y_train = y[:train_end]
+    y_test = y[test_start:test_end]
 
-        # Fit the ARIMA model
-        model = ARIMA(y_train, order=(15, 2, 1))
-        model_fit = model.fit()
+    # Fit the ARIMA model
+    model = ARIMA(y_train, order=(15, 2, 1))
+    model_fit = model.fit()
 
-        # Make predictions for the entire test period
-        predictions = model_fit.predict(
-            start=test_start, end=test_end, typ='levels')
+    # Make predictions for the entire test period
+    predictions = model_fit.predict(
+        start=test_start, end=test_end, typ='levels')
 
-        # Ensure y_test and predictions have the same index
-        y_test = y_test.loc[predictions.index]
+    # Ensure y_test and predictions have the same index
+    y_test = y_test.loc[predictions.index]
 
-        # Combine the actual and predicted values into a single DataFrame for easier plotting
-        plot_data = pd.DataFrame({
-            'date': y.index,
-            'actual': y,
-            'predicted': np.nan
-        })
-        plot_data.loc[predictions.index, 'predicted'] = predictions
+    # Combine the actual and predicted values into a single DataFrame for easier plotting
+    plot_data = pd.DataFrame({
+        'date': y.index,
+        'actual': y,
+        'predicted': np.nan
+    })
+    plot_data.loc[predictions.index, 'predicted'] = predictions
 
-        # Plot the results
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=plot_data[plot_data['date'] <= '2022-07-31']['date'], y=plot_data[plot_data['date']
-                      <= '2022-07-31']['actual'], mode='lines', name='Actual', line=dict(color='blue')))
-        fig.add_trace(go.Scatter(x=plot_data['date'], y=plot_data['predicted'],
-                      mode='lines', name='Predicted', line=dict(color='red', dash='dash')))
-        fig.update_layout(xaxis_title='Date', yaxis_title='Admitted COVID Patients',
-                          title=f'Actual vs Predicted Admitted COVID Patients in {state_to_plot}')
+    # Plot the results
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=plot_data[plot_data['date'] <= '2022-07-31']['date'], y=plot_data[plot_data['date']
+                                                                                                 <= '2022-07-31']['actual'], mode='lines', name='Actual', line=dict(color='blue')))
+    fig.add_trace(go.Scatter(x=plot_data['date'], y=plot_data['predicted'],
+                             mode='lines', name='Predicted', line=dict(color='red', dash='dash')))
+    fig.update_layout(xaxis_title='Date', yaxis_title='Admitted COVID Patients',
+                      title=f'Actual vs Predicted Admitted COVID Patients in {state_to_plot}')
 
-        st.plotly_chart(fig)
+    st.plotly_chart(fig)
+
+    # Display the prediction results
+    st.write('Mean Absolute Error:', np.mean(
+        np.abs(predictions - y_test)))
+    st.write('Mean Squared Error:', np.mean((predictions - y_test)**2))
+    st.write('Root Mean Squared Error:', np.sqrt(
+        np.mean((predictions - y_test)**2)))
 
 
 if __name__ == "__main__":
