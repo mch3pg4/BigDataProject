@@ -8,9 +8,9 @@ from sklearn.ensemble import RandomForestRegressor
 
 def read_data():
     # Load the data
-    vaccination_data = pd.read_csv('filtered_datasets/vax_state.csv')
-    death_data = pd.read_csv('filtered_datasets/death_state.csv')
-    cases_data = pd.read_csv('filtered_datasets/cases_state.csv')
+    vaccination_data = pd.read_csv('datasets/filtered_datasets/vax_state.csv')
+    death_data = pd.read_csv('datasets/filtered_datasets/death_state.csv')
+    cases_data = pd.read_csv('datasets/filtered_datasets/cases_state.csv')
 
     # Convert the 'date' columns to datetime
     vaccination_data['date'] = pd.to_datetime(vaccination_data['date'])

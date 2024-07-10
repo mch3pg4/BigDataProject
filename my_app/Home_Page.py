@@ -63,13 +63,15 @@ def main():
 
     # load and prepare all datasets
     cases_data = load_and_prepare_data(
-        'filtered_datasets/cases_state.csv', 'date')
+        'datasets/filtered_datasets/cases_state.csv', 'date')
     death_data = load_and_prepare_data(
-        'filtered_datasets/death_state.csv', 'date')
+        'datasets/filtered_datasets/death_state.csv', 'date')
     hospital_data = load_and_prepare_data(
-        'filtered_datasets/hospital.csv', 'date')
-    icu_data = load_and_prepare_data('filtered_datasets/icu.csv', 'date')
-    vax_data = load_and_prepare_data('filtered_datasets/vax_state.csv', 'date')
+        'datasets/filtered_datasets/hospital.csv', 'date')
+    icu_data = load_and_prepare_data(
+        'datasets/filtered_datasets/icu.csv', 'date')
+    vax_data = load_and_prepare_data(
+        'datasets/filtered_datasets/vax_state.csv', 'date')
 
     # Four key metrics
     # Calculate total cases, deaths, recoveries and vaccinations
@@ -127,7 +129,7 @@ def main():
     covid_cases_monthly['month'] = covid_cases_monthly['month'].dt.strftime(
         '%Y-%m')
 
-    # Create a choropleth map
+    # Create a choropleth map to show the distribution of cases by state
     fig_covid_map = px.choropleth_mapbox(
         covid_cases_monthly,
         geojson=malaysia_geojson,

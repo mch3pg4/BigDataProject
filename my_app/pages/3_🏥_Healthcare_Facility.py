@@ -13,9 +13,9 @@ from sklearn.pipeline import Pipeline
 
 def load_data():
     # Load the data
-    hospital_data = pd.read_csv('filtered_datasets/hospital.csv')
-    icu_data = pd.read_csv('filtered_datasets/icu.csv')
-    cases_data = pd.read_csv('filtered_datasets/cases_state.csv')
+    hospital_data = pd.read_csv('datasets/filtered_datasets/hospital.csv')
+    icu_data = pd.read_csv('datasets/filtered_datasets/icu.csv')
+    cases_data = pd.read_csv('datasets/filtered_datasets/cases_state.csv')
 
     # Convert the 'date' columns to datetime
     hospital_data['date'] = pd.to_datetime(hospital_data['date'])
@@ -213,7 +213,7 @@ def main():
     st.subheader("Map of Hospitalized COVID-19 Patients by State")
 
     # Read hospitalization data
-    hospital_data = pd.read_csv('filtered_datasets/hospital.csv')
+    hospital_data = pd.read_csv('datasets/filtered_datasets/hospital.csv')
     hospital_data['date'] = pd.to_datetime(hospital_data['date'])
 
     # Convert data from daily to monthly
@@ -302,9 +302,9 @@ def main():
     # Machine Learning prediction to see COVID-19 cases vs admitted patients
 
     covid_data = pd.read_csv(
-        'filtered_datasets/cases_state.csv', parse_dates=['date'])
+        'datasets/filtered_datasets/cases_state.csv', parse_dates=['date'])
     hospital_data = pd.read_csv(
-        'filtered_datasets/hospital.csv', parse_dates=['date'])
+        'datasets/filtered_datasets/hospital.csv', parse_dates=['date'])
 
     # Merge the data on the date column
     data = pd.merge(covid_data, hospital_data, on=['date', 'state'])
