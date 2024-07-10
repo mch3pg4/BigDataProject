@@ -71,7 +71,7 @@ def main():
     icu_data = load_and_prepare_data('filtered_datasets/icu.csv', 'date')
     vax_data = load_and_prepare_data('filtered_datasets/vax_state.csv', 'date')
 
-    # Three key metrics: Total cases, total deaths, and total recoveries
+    # Four key metrics
     # Calculate total cases, deaths, recoveries and vaccinations
     total_cases = cases_data['cases_new'].sum()
     total_deaths = death_data[[
@@ -150,7 +150,6 @@ def main():
     st.plotly_chart(fig_covid_map)
 
     # Pie chart of covid cases by age group and state
-    # Load the COVID-19 cases data
     # Calculate the total cases for each age group
     total_cases = {
         'Child': cases_data['cases_child'].sum(),
@@ -169,6 +168,7 @@ def main():
                                color_discrete_sequence=px.colors.qualitative.Set3)
     fig_pie_age_group.update_layout(legend_title_text='Age Group')
 
+    # pie chart of covid-19 cases by state
     # Filter the data to include only the specified states
     filtered_cases_data = cases_data[cases_data['state'].isin(states)]
 
@@ -228,7 +228,7 @@ def main():
     state_vaccination_totals = filtered_vaccination_data.groupby(
         'state')[['cumul_partial', 'cumul_full', 'cumul_booster', 'cumul_booster2']].max().reset_index()
 
-    # Melt the DataFrame for Plotly
+    # Melt the DataFrame (massage the data) columns become values
     vaccination_melted = state_vaccination_totals.melt(id_vars='state', value_vars=['cumul_partial', 'cumul_full', 'cumul_booster', 'cumul_booster2'],
                                                        var_name='Vaccination Type', value_name='Total Vaccinations')
 
